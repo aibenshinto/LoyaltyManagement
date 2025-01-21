@@ -1,6 +1,49 @@
-<h1>Create a Coupon</h1>
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Coupon</button>
+<form method="POST" id="create-coupon-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+
+  <label for="coupon_type">Coupon Type</label>
+  <select id="coupon_type" name="coupon_type" onchange="showCouponFields()">
+      <option value="">-- Select Coupon Type --</option>
+      <option value="discount">Discount</option>
+      <option value="bogo">Buy One Get One</option>
+  </select>
+
+  <div id="discount-fields" style="display: none;">
+      <h3>Discount Coupon Rules</h3>
+      {{ discount_form.as_p }}
+  </div>
+
+  <div id="bogo-fields" style="display: none;">
+      <h3>BOGO Coupon Rules</h3>
+      {{ bogo_form.as_p }}
+  </div>
+
+  <button type="submit">Create Coupon</button>
 </form>
+
+
+<script>
+  // JavaScript function to display the relevant coupon fields based on selection
+  function showCouponFields() {
+      var couponType = document.getElementById("coupon_type").value;
+      
+      // Hide both sections initially
+      document.getElementById("discount-fields").style.display = "none";
+      document.getElementById("bogo-fields").style.display = "none";
+
+      // Remove 'required' attribute from both fields
+      document.getElementById("id_product_to_buy").removeAttribute("required");
+      document.getElementById("id_free_product").removeAttribute("required");
+
+      // Show the selected coupon type's fields and make them required
+      if (couponType === "discount") {
+          document.getElementById("discount-fields").style.display = "block";
+      } else if (couponType === "bogo") {
+          document.getElementById("bogo-fields").style.display = "block";
+          // Make these fields required for BOGO
+          document.getElementById("id_product_to_buy").setAttribute("required", "true");
+          document.getElementById("id_free_product").setAttribute("required", "true");
+      }
+  }
+</script>

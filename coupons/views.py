@@ -1,50 +1,66 @@
-from django.shortcuts import render, redirect
-from .forms import CouponForm
+from rest_framework.response import Response
+from rest_framework import status
 from django.utils import timezone
 from .models import Coupon
-from .forms import ApplyCouponForm,CouponForm, DiscountCouponForm, BOGOCouponForm
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from .serializers import ApplyCouponSerializer, VendorRegistrationSerializer, CouponSerializer, DiscountCouponSerializer, BOGOCouponSerializer
+from .models import Vendor
+from rest_framework import generics
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-# @login_required
-def create_coupon(request):
-    if request.method == 'POST':
-        form = CouponForm(request.POST)
-        discount_form = DiscountCouponForm(request.POST)
-        bogo_form = BOGOCouponForm(request.POST)
+
+# Vendor Registration API
+class VendorRegisterAPI(generics.CreateAPIView):
+    queryset = Vendor.objects.all()
+    serializer_class = VendorRegistrationSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Vendor registered successfully"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Vendor Login API using JWT (Obtain Token Pair)
+class VendorLoginAPI(TokenObtainPairView):
+    pass
+
+
+# API to Create Coupons
+class CreateCouponAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        coupon_type = request.data.get('coupon_type', '')
         
-        coupon_type = request.POST.get('coupon_type', '')  # Get the coupon type from the form
-
-        if form.is_valid():
-            # Save the main coupon data
-            coupon = form.save(commit=False)
-            coupon.vendor = request.user  # Assign the vendor creating the coupon
-            coupon.save()
-
-            # Check which coupon type is selected and save the corresponding rules
-            if coupon_type == 'discount' and discount_form.is_valid():
-                discount_rule = discount_form.save(commit=False)
-                discount_rule.coupon = coupon
-                discount_rule.save()
-
-            elif coupon_type == 'bogo' and bogo_form.is_valid():
-                bogo_rule = bogo_form.save(commit=False)
-                bogo_rule.coupon = coupon
-                bogo_rule.save()
-
-            return redirect('coupon_success')  # Redirect after successful creation
-    else:
-        form = CouponForm()
-        discount_form = DiscountCouponForm()
-        bogo_form = BOGOCouponForm()
-
-    return render(request, 'create_coupon.html', {
-        'form': form,
-        'discount_form': discount_form,
-        'bogo_form': bogo_form
-    })
+        try:
+            vendor = Vendor.objects.get(user=request.user)
+        except Vendor.DoesNotExist:
+            return Response({"message": "Vendor not found for the current user."}, status=status.HTTP_400_BAD_REQUEST)
 
 
+        coupon_serializer = CouponSerializer(data=request.data, context={'request': request})
+        if coupon_serializer.is_valid():
+            coupon = coupon_serializer.save(vendor=vendor)
+
+            if coupon_type == 'discount':
+                discount_serializer = DiscountCouponSerializer(data=request.data, context={'request': request})
+                if discount_serializer.is_valid():
+                    discount_coupon = discount_serializer.save(coupon=coupon)
+                    return Response({"message": "Discount coupon created successfully"}, status=status.HTTP_201_CREATED)
+            elif coupon_type == 'bogo':
+                bogo_serializer = BOGOCouponSerializer(data=request.data, context={'request': request})
+                if bogo_serializer.is_valid():
+                    bogo_coupon = bogo_serializer.save(coupon=coupon)
+                    return Response({"message": "BOGO coupon created successfully"}, status=status.HTTP_201_CREATED)
+            
+        return Response(coupon_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Apply Coupon Logic
 def apply_coupon_logic(coupon_code, total_purchase_amount):
     try:
         coupon = Coupon.objects.get(code=coupon_code)
@@ -56,40 +72,36 @@ def apply_coupon_logic(coupon_code, total_purchase_amount):
                 final_amount = total_purchase_amount - discount_value
                 return {"valid": True, "final_amount": final_amount, "discount_value": discount_value}
 
-            # elif hasattr(coupon, 'bogo_rule'):
-            #     bogo_rule = coupon.bogo_rule
-            #     free_product = bogo_rule.apply_bogo(purchased_products)  # Check purchased products
-            #     if free_product:
-            #         return {"valid": True, "free_product": free_product}
-            #     else:
-            #         return {"valid": False, "message": "BOGO conditions not met."}
-
         else:
             return {"valid": False, "message": "Coupon is expired or not yet valid."}
     except Coupon.DoesNotExist:
         return {"valid": False, "message": "Invalid coupon code."}
     
     
-def coupon_success(request):
-    return render(request, 'coupon_success.html')
-
-
-def apply_coupon(request):
-    if request.method == 'POST':
-        form = ApplyCouponForm(request.POST)
-        if form.is_valid():
-            coupon_code = form.cleaned_data['coupon_code']
-            total_purchase_amount = 1000  # Assume this is fetched from the cart total
-
-            # Try to apply the coupon
+# Apply Coupon API
+class ApplyCouponAPI(APIView):
+    def post(self, request):
+        serializer = ApplyCouponSerializer(data=request.data)
+        if serializer.is_valid():
+            coupon_code = serializer.validated_data['coupon_code']
+            total_purchase_amount = serializer.validated_data['total_price']
+            
             result = apply_coupon_logic(coupon_code, total_purchase_amount)
-
+            
             if result['valid']:
-                messages.success(request, f"Coupon applied! You saved {result['discount_value']}!")
-                return render(request, 'checkout.html', {'form': form, 'final_amount': result['final_amount']})
+                return Response({
+                    'success': True,
+                    'final_amount': result['final_amount'],
+                    'discount_value': result['discount_value']
+                })
             else:
-                messages.error(request, result['message'])
-    else:
-        form = ApplyCouponForm()
+                return Response({
+                    'success': False,
+                    'message': result['message']
+                }, status=400)
+        return Response(serializer.errors, status=400)
 
-    return render(request, 'apply_coupon.html', {'form': form})
+
+# JWT Token Refresh API
+class TokenRefreshAPI(TokenRefreshView):
+    pass

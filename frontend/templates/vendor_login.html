@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Login</title>
+</head>
+<body>
+    <h1>Vendor Login</h1>
+    <form id="loginForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br><br>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <div id="errorMessage" style="color: red; display: none;"></div>
+    <div id="successMessage" style="color: green; display: none;"></div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const successMessageDiv = document.getElementById('successMessage');
+
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent the form from submitting the default way
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Hide previous messages
+            errorMessageDiv.style.display = 'none';
+            successMessageDiv.style.display = 'none';
+
+            // Make the POST request to login API
+            fetch('http://localhost:8000/api/vendor/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    // Login successful, display success message and store token
+                    successMessageDiv.innerHTML = 'Login successful!';
+                    successMessageDiv.style.display = 'block';
+
+                    // Store the token in localStorage or cookies
+                    localStorage.setItem('token', data.token);
+                    console.log('Token:', data.token); // This is the token you will use in subsequent requests
+                } else {
+                    // Handle case where the API does not return a token
+                    errorMessageDiv.innerHTML = 'Login failed. Please check your credentials.';
+                    errorMessageDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorMessageDiv.innerHTML = 'Something went wrong. Please try again.';
+                errorMessageDiv.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

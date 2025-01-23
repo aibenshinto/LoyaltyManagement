@@ -1,24 +1,25 @@
 from rest_framework.response import Response
-from django.http import JsonResponse
 from rest_framework import status
 from django.utils import timezone
-from .models import Coupon
+from .models import Coupon,Vendor
 from .serializers import ApplyCouponSerializer, CouponSerializer, DiscountCouponSerializer, BOGOCouponSerializer
-from .models import Vendor
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import render
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from wallet.models import CustomerVendor
+from rest_framework.renderers import TemplateHTMLRenderer
 
 
 # API to Create Coupons
 class CreateCouponAPI(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    
+    template_name = 'create_coupon.html'
     
     def get(self, request):
-        return render(request, 'create_coupon.html') 
+        return Response({}, template_name=self.template_name) 
 
     def post(self, request):
         coupon_type = request.data.get('coupon_type', '')
@@ -52,7 +53,7 @@ def apply_coupon_logic(coupon_code, total_purchase_amount, vendor_key, user):
     try:
         coupon = Coupon.objects.get(code=coupon_code,vendor = vendor_key)
         
-        if not Customer.objects.filter(user=user, vendor=coupon.vendor).exists():
+        if not CustomerVendor.objects.filter(customerid=user, vendorkey=vendor_key).exists():
                 return {"valid": False, "message": "You are not a customer of this vendor."}
         
         if coupon.valid_from <= timezone.now() <= coupon.valid_until:

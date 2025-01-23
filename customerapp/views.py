@@ -25,7 +25,7 @@ def generate_jwt_tokens(user):
 
 class CustomerRegisterView(View):
     def get(self, request):
-        return render(request, 'register.html')
+        return render(request, 'cust_register.html')
 
     def post(self, request):
         username = request.POST.get('username')
@@ -56,7 +56,7 @@ class CustomerRegisterView(View):
 
 class LoginView(View):
     def get(self, request):
-        return render(request, 'login.html')
+        return render(request, 'cust_login.html')
 
     def post(self, request):
         username = request.POST.get('username')

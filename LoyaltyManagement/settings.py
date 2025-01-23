@@ -38,14 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'coupons',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'corsheaders',
     'authentication',
+    'points',
+    'coupons',
+   'rest_framework.authtoken',
     'rest_framework_simplejwt',
+    'customerapp',
+    'ecommerce',
+    'corsheaders',
     
 ]
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -80,6 +83,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
+
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

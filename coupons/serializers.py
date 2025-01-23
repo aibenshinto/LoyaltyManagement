@@ -60,3 +60,4 @@ class BOGOCouponSerializer(serializers.ModelSerializer):
 class ApplyCouponSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(max_length=20)
     total_price = serializers.DecimalField(max_digits=10,decimal_places=2)
+    vendor_key = serializers.UUIDField()

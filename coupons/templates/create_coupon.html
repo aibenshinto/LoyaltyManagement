@@ -51,35 +51,24 @@
 
     <!-- Script to handle form submission and send data using fetch API -->
     <script>
-        document.getElementById('couponType').addEventListener('change', function() {
-            const couponType = this.value;
-            if (couponType === 'discount') {
-                document.getElementById('discountFields').style.display = 'block';
-                document.getElementById('bogoFields').style.display = 'none';
-            } else if (couponType === 'bogo') {
-                document.getElementById('discountFields').style.display = 'none';
-                document.getElementById('bogoFields').style.display = 'block';
-            }
-        });
-
         document.getElementById('couponForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
+            event.preventDefault();  // Prevent the form from submitting in the traditional way
+    
             const formData = new FormData(this);
             const data = {};
-
-            // Convert FormData to JSON
+    
+            // Convert formData to JSON format
             formData.forEach((value, key) => {
                 data[key] = value;
             });
-
+    
             fetch('http://localhost:8000/api/coupons/create/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Token ' + localStorage.getItem('token')  // Assume token is stored in localStorage
+                    'Authorization': 'Token ' + localStorage.getItem('token')  // Ensure the token is set properly
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(data)  // Send the data as JSON
             })
             .then(response => response.json())
             .then(data => {

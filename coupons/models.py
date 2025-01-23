@@ -1,19 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
+from authentication.models import Vendor
 
-
-class Vendor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    business_name = models.CharField(max_length=100)
-    address = models.TextField()
-
-    def __str__(self):
-        return self.business_name
 
 # Base Coupon Model
 class Coupon(models.Model):
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)  # Assuming each vendor is a user
-    code = models.CharField(max_length=20, unique=True)  # Unique coupon code
+    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)  
+    code = models.CharField(max_length=20, unique=True)
     min_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()

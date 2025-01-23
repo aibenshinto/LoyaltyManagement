@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f5f7;">
+
+    <!-- Dashboard Container -->
+    <div class="container-fluid vh-100">
+        <div class="row h-100">
+
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 bg-dark text-white d-flex flex-column p-4">
+                <h3 class="text-center mb-4" style="font-weight: bold; letter-spacing: 1px;">Vendor Dashboard</h3>
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-3">
+                        <a href="#coins" class="nav-link text-white">💰 Coins</a>
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a href="#wallet" class="nav-link text-white">👛 Wallet</a>
+                    </li>
+                    <li class="nav-item mb-3">
+                        <a href="" id="" class="nav-link text-white">🎟️ Coupons</a>
+                    </li>
+                </ul>
+                <div class="mt-auto text-center">
+                    <a href="{% url 'logout' %}" class="btn btn-danger w-100">Logout</a>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 col-lg-10 p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 style="font-weight: bold; color: #333;">Welcome, Vendor!</h2>
+                    <span style="font-size: 14px; color: #777;">Last Login: <strong>January 22, 2025</strong></span>
+                </div>
+
+                <!-- Coins Section -->
+                <div id="coins" class="mb-5">
+                    <h4 style="font-weight: bold; color: #555;">💰 Coins</h4>
+                    <div class="card shadow-sm" style="border: none;">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <p style="margin: 0;">You have <span id="coin-count" style="font-weight: bold;">150</span> coins available.</p>
+                            <button class="btn btn-primary" onclick="addCoins()">Add Coins</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wallet Section -->
+                <div id="wallet" class="mb-5">
+                    <h4 style="font-weight: bold; color: #555;">👛 Wallet</h4>
+                    <div class="card shadow-sm" style="border: none;">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <p style="margin: 0;">Current Balance: <span id="wallet-balance" style="font-weight: bold;">$100.00</span></p>
+                            <button class="btn btn-success" onclick="addToWallet()">Add Funds</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coupons Section -->
+                <div id="coupons">
+                    <h4 style="font-weight: bold; color: #555;">🎟️ Coupons</h4>
+                    <div class="card shadow-sm" style="border: none;">
+                        <div class="card-body">
+                            <p style="margin-bottom: 10px;">Available Coupons:</p>
+                            <ul id="coupon-list" class="list-group">
+                                <!-- Coupon List will be populated by API response -->
+                            </ul>
+                            <button class="btn btn-warning mt-3" onclick="addCoupon()">Add Coupon</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Inline JavaScript -->
+    <script>
+        document.getElementById('coupons-button').addEventListener('click', function () {
+            // Get CSRF token from cookies
+            const csrfToken = document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+
+            fetch('/api/coupons/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle response: populate the coupon list
+                const couponList = document.getElementById('coupon-list');
+                couponList.innerHTML = ''; // Clear the current list
+
+                data.forEach(coupon => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    listItem.innerHTML = `${coupon.description} <span class="badge bg-${coupon.status === 'active' ? 'success' : 'danger'}">${coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1)}</span>`;
+                    couponList.appendChild(listItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching coupons:', error);
+                alert('Error fetching coupons: ' + error.message);
+            });
+        });
+
+        function addCoins() {
+            let coinCount = document.getElementById("coin-count");
+            let currentCoins = parseInt(coinCount.textContent);
+            coinCount.textContent = currentCoins + 10;
+            alert("10 coins added!");
+        }
+
+        function addToWallet() {
+            let walletBalance = document.getElementById("wallet-balance");
+            let currentBalance = parseFloat(walletBalance.textContent.replace("$", ""));
+            walletBalance.textContent = "$" + (currentBalance + 50).toFixed(2);
+            alert("$50 added to wallet!");
+        }
+
+        function addCoupon() {
+            let couponList = document.getElementById("coupon-list");
+            let newCoupon = document.createElement("li");
+            newCoupon.className = "list-group-item d-flex justify-content-between align-items-center";
+            newCoupon.textContent = "Exclusive 20% Off for You!";
+            let badge = document.createElement("span");
+            badge.className = "badge bg-success";
+            badge.textContent = "Active";
+            newCoupon.appendChild(badge);
+            couponList.appendChild(newCoupon);
+            alert("New coupon added!");
+        }
+
+        function logout() {
+            alert("You have logged out!");
+            // Add your logout logic here
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+   
+</body>
+</html>

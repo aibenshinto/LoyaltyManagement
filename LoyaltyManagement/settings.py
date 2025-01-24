@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'customerapp',
     'ecommerce',
     'corsheaders',
-    
+  
 ]
 
 

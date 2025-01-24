@@ -22,5 +22,5 @@ urlpatterns = [
     path('', include('authentication.urls')),
     path('',include('coupons.urls')),
     path('', include('frontend.urls')),
-    path('',include('customerapp.urls')),
+    path('customer/',include('customerapp.urls')),
 ]

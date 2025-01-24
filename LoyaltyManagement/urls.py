@@ -23,4 +23,5 @@ urlpatterns = [
     path('',include('coupons.urls')),
     # path('', include('frontend.urls')),
     path('customer/',include('customerapp.urls')),
+    path('', include('wallet.urls')),
 ]

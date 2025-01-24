@@ -21,7 +21,6 @@ def generate_jwt_tokens(user):
         'access': str(refresh.access_token),
     }
 
-
 class CustomerRegisterView(View):
     def get(self, request):
         return render(request, 'cust_register.html')
@@ -32,45 +31,47 @@ class CustomerRegisterView(View):
         name = request.POST.get('name')
         phone = request.POST.get('phone_number')
         email = request.POST.get('email')
-        referral_code = request.POST.get('referral_code', None)  
-        vendor_key = "YOUR_VENDOR_KEY" 
+        referral_code = request.POST.get('referral_code', None)
+        vendor_key = "YOUR_VENDOR_KEY"  # Replace with the actual vendor key
 
         if not username or not password:
             return HttpResponse("Username and password are required.", status=400)
 
         if User.objects.filter(username=username).exists():
             return HttpResponse("Username already exists.", status=400)
-        
-        try:
-            with transaction.atomic():        
-                user = User.objects.create_user(username=username, password=password, email=email)
-                Customer.objects.create(
-                    user=user,
-                    name=name,
-                    phone_number=phone,
-                    email=email,
-                    referral_code=referral_code 
 
+        try:
+            with transaction.atomic():
+                # Create the user and customer
+                user = User.objects.create_user(username=username, password=password, email=email)
+                customer = Customer.objects.create(
+                    user=user, name=name, phone_number=phone, email=email, referral_code=referral_code
                 )
-        # Always call the referral API, even if no referral_code is provided
+
+                # Now that the customer is created, pass the correct customer_id to the API
                 response = requests.post(
-                    'http://127.0.0.1:8000/api/customer-data/',  # Adjust URL if necessary
+                    'http://127.0.0.1:8000/api/customer-data/',
                     json={
-                        # 'customer_id': customer.id,
+                        'customer_id': customer.id,  # Pass the actual customer_id
                         'vendor_key': vendor_key,
-                        'referral_code': referral_code  # This will be None if not provided
+                        'referral_code': referral_code
                     }
                 )
 
+                # Handle the API response
                 if response.status_code != 200:
-                    # Log the error but do not roll back user creation for signup bonuses
                     print(f"Referral API error: {response.status_code}, {response.text}")
+                    return HttpResponse("Unable to complete registration. Please try again.", status=500)
 
         except requests.RequestException as e:
             print(f"API call failed: {str(e)}")
             return HttpResponse("Unable to complete registration. Please try again.", status=500)
+        except Exception as e:
+            return HttpResponse(f"Error during registration: {str(e)}", status=500)
 
+        # Redirect to the login page on successful registration
         return redirect('cust_login')
+
 
 
 class LoginView(View):

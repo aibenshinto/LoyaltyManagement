@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models import Coupon, DiscountCoupon, BOGOCoupon
+from .models import Coupon, DiscountCoupon
 
 # Register Coupon model to manage coupons
 class CouponAdmin(admin.ModelAdmin):
-    list_display = ('vendor', 'code', 'min_purchase_amount', 'valid_from', 'valid_until')
+    list_display = ('vendor', 'code', 'valid_from', 'valid_until')
     search_fields = ('code', 'vendor__username')  # Add search functionality by coupon code and vendor username
     list_filter = ('vendor', 'valid_from', 'valid_until')  # Add filters for easy searching
 
@@ -18,4 +18,3 @@ admin.site.register(DiscountCoupon, DiscountCouponAdmin)
 class BOGOCouponAdmin(admin.ModelAdmin):
     list_display = ('coupon', 'product_to_buy', 'free_product')
 
-admin.site.register(BOGOCoupon, BOGOCouponAdmin)

@@ -7,7 +7,6 @@ from authentication.models import Vendor
 class Coupon(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)  
     code = models.CharField(max_length=20, unique=True)
-    min_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()
 
@@ -27,13 +26,14 @@ class DiscountCoupon(models.Model):
             return (self.discount_percentage / 100) * total_purchase_amount
         return 0
 
-# BOGO Coupon Model with Specific Rules
-class BOGOCoupon(models.Model):
-    coupon = models.OneToOneField(Coupon, on_delete=models.CASCADE, related_name="bogo_rule")
-    product_to_buy = models.CharField(max_length=100)  # Product to buy for the BOGO
-    free_product = models.CharField(max_length=100)  # Free product to be given
-
-    def apply_bogo(self, purchased_products):
-        if self.product_to_buy in purchased_products:
-            return self.free_product
-        return None
+# Min Purchase Coupon Model with Specific Rules
+class MinPurchaseCoupon(models.Model):
+    coupon = models.OneToOneField(Coupon, on_delete=models.CASCADE, related_name="min_purchase_rule")
+    minimum_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    reward_type_choices = [
+        ('discount', 'Discount Coupon'),
+        ('coins', 'Coins Reward')
+    ]
+    reward_type = models.CharField(max_length=10, choices=reward_type_choices)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # for discount reward
+    coin_reward = models.IntegerField(null=True, blank=True)  # for coin reward

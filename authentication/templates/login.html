@@ -38,29 +38,34 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Place this code before the closing /body tag -->
     <script>
-    fetch('/vendor/login/', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ username: username, password: password }),
-})
-.then(response => response.json())
-.then(data => {
-  if (data.access_token) {
-    // Store the access token in localStorage
-    localStorage.setItem('access_token', data.access_token);
+      document.getElementById("login-form").addEventListener("submit", function (e) {
+        e.preventDefault(); 
     
-    // Redirect the user
-    window.location.href = data.redirect_url;
-  } else {
-    alert('Login failed: ' + data.message);
-  }
-})
-.catch(error => {
-  console.error('Error:', error);
-});
-    </script>
+        const formData = new FormData(document.getElementById("login-form"));
+        const data = new URLSearchParams(formData).toString(); // Serialize the form data
+    
+        fetch('/vendor/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',  // Correct encoding
+            },
+            body: data,  
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.access_token) {
+                localStorage.setItem('access_token', data.access_token);  
+                window.location.href = '/vendor/dashboard/';
+            } else {
+                alert('Login failed: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error during login:', error);
+            alert('Login failed. Please try again.');
+        });
+    });
+      </script>
     
 </body>
 </html>

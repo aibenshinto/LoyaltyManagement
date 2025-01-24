@@ -81,15 +81,12 @@
     <!-- Inline JavaScript -->
     <script>
         document.getElementById('coupons-button').addEventListener('click', function () {
-            // Get CSRF token from cookies
-            const csrfToken = document.cookie.split('; ')
-                .find(row => row.startsWith('csrftoken='))
-                ?.split('=')[1];
+            
 
             fetch('/api/coupons/', {
                 method: 'GET',
                 headers: {
-                    'X-CSRFToken': csrfToken,
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`, 
                     'Content-Type': 'application/json',
                 }
             })
@@ -140,6 +137,7 @@
         }
 
         function logout() {
+            localStorage.removeItem('access_token');
             alert("You have logged out!");
             // Add your logout logic here
         }

@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from .models import Coupon,Vendor
-from .serializers import ApplyCouponSerializer, CouponSerializer, DiscountCouponSerializer, BOGOCouponSerializer
+from .serializers import ApplyCouponSerializer, CouponSerializer, DiscountCouponSerializer, MinPurchaseCouponSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import render
@@ -19,6 +19,7 @@ class CreateCouponAPI(APIView):
     template_name = 'create_coupon.html'
     
     def get(self, request):
+        print(request.headers)
         return Response({}, template_name=self.template_name) 
 
     def post(self, request):
@@ -39,11 +40,12 @@ class CreateCouponAPI(APIView):
                 if discount_serializer.is_valid():
                     discount_coupon = discount_serializer.save(coupon=coupon)
                     return Response({"message": "Discount coupon created successfully"}, status=status.HTTP_201_CREATED)
-            elif coupon_type == 'bogo':
-                bogo_serializer = BOGOCouponSerializer(data=request.data, context={'request': request})
-                if bogo_serializer.is_valid():
-                    bogo_coupon = bogo_serializer.save(coupon=coupon)
-                    return Response({"message": "BOGO coupon created successfully"}, status=status.HTTP_201_CREATED)
+            elif coupon_type == 'min_purchase':
+                min_purchase_serializer = MinPurchaseCouponSerializer(data=request.data, context={'request': request})
+                if min_purchase_serializer.is_valid():
+                    min_purchase_coupon = min_purchase_serializer.save(coupon=coupon)
+                    return Response({"message": "Min Purchase coupon created successfully"}, status=status.HTTP_201_CREATED)
+            
             
         return Response(coupon_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -63,12 +65,21 @@ def apply_coupon_logic(coupon_code, total_purchase_amount, vendor_key, user):
                 discount_value = discount_rule.get_discount_value(total_purchase_amount)
                 final_amount = total_purchase_amount - discount_value
                 return {"valid": True, "final_amount": final_amount, "discount_value": discount_value}
-
+            elif hasattr(coupon, 'min_purchase_rule'):
+                min_purchase_rule = coupon.min_purchase_rule
+                reward = min_purchase_rule.apply_reward(total_purchase_amount)
+                if reward['reward'] == 'discount':
+                    final_amount = total_purchase_amount - reward['discount_value']
+                    return {"valid": True, "final_amount": final_amount, "discount_value": reward['discount_value']}
+                elif reward['reward'] == 'coins':
+                    return {"valid": True, "final_amount": total_purchase_amount, "coins_awarded": reward['coins_awarded']}
+            
+            return {"valid": False, "message": "No applicable rule found."}
         else:
             return {"valid": False, "message": "Coupon is expired or not yet valid."}
     except Coupon.DoesNotExist:
         return {"valid": False, "message": "Invalid coupon code."}
-   
+  
     
 # Apply Coupon API
 class ApplyCouponAPI(APIView):
@@ -78,7 +89,8 @@ class ApplyCouponAPI(APIView):
             coupon_code = serializer.validated_data['coupon_code']
             total_purchase_amount = serializer.validated_data['total_price']
             vendor_key = serializer.validated_data['vendor_key']
-            user = request.user 
+            user = serializer.validated_data['cust_id']
+            
             
             result = apply_coupon_logic(coupon_code, total_purchase_amount, vendor_key, user)
             

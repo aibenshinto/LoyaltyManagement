@@ -1,29 +1,10 @@
 from rest_framework import serializers
-from .models import Vendor, Coupon, DiscountCoupon, BOGOCoupon
-from django.contrib.auth.models import User
+from .models import Vendor, Coupon, DiscountCoupon, MinPurchaseCoupon
 
 
-class VendorRegistrationSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=150)
-    password = serializers.CharField(write_only=True)
-    email = serializers.EmailField()
-
-    class Meta:
-        model = Vendor
-        fields = ['business_name', 'address', 'username', 'password', 'email']
-
-    def create(self, validated_data):
-        user_data = {
-            'username': validated_data.pop('username'),
-            'email': validated_data.pop('email'),
-            'password': validated_data.pop('password')
-        }
-        user = User.objects.create_user(**user_data)
-        vendor = Vendor.objects.create(user=user, **validated_data)
-        return vendor
 
 
-class CouponSerializer(serializers.ModelSerializer):
+class  CouponSerializer(serializers.ModelSerializer):
     # Set vendor as read-only without providing the queryset
     vendor = serializers.PrimaryKeyRelatedField(read_only=True)
 
@@ -51,13 +32,13 @@ class DiscountCouponSerializer(serializers.ModelSerializer):
         model = DiscountCoupon
         fields = ['discount_amount', 'discount_percentage']
 
-class BOGOCouponSerializer(serializers.ModelSerializer):
+class MinPurchaseCouponSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BOGOCoupon
-        fields = ['product_to_buy', 'free_product']
-        
+        model = MinPurchaseCoupon
+        fields = ['minimum_purchase_amount']   
    
 class ApplyCouponSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(max_length=20)
     total_price = serializers.DecimalField(max_digits=10,decimal_places=2)
     vendor_key = serializers.UUIDField()
+    cust_id = serializers.CharField(max_length=20)

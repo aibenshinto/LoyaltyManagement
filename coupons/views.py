@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-
+from rest_framework.renderers import TemplateHTMLRenderer
 
 # Vendor Registration API
 class VendorRegisterAPI(generics.CreateAPIView):

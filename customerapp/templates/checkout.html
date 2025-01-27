@@ -50,6 +50,10 @@
         <p>Your cart is empty. Please add items to your cart.</p>
         {% endif %}
         
+        {% if error_message %}
+            <div class="alert alert-danger">{{ error_message }}</div>
+        {% endif %}
+
         <a href="{% url 'product-list' %}" class="btn btn-primary mt-3">Back to Products</a>
     </div>
 </body>

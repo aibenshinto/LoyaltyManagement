@@ -5,18 +5,17 @@ from .models import Coupon,Vendor
 from .serializers import ApplyCouponSerializer, CouponSerializer, DiscountCouponSerializer, MinPurchaseCouponSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import render
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from wallet.models import CustomerVendor
 from rest_framework.renderers import TemplateHTMLRenderer
-import uuid
 
-from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password
+
+
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import VendorRegistrationSerializer,VendorLoginSerializer
+from rest_framework.renderers import TemplateHTMLRenderer
 
 class VendorRegistrationAPIView(APIView):
     permission_classes = [AllowAny]

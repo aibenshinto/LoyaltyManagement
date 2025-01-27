@@ -3,7 +3,7 @@ from .views import  CreateCouponAPI, ApplyCouponAPI,VendorRegistrationAPIView,Ve
 
 urlpatterns = [
     
-     path('register/', VendorRegistrationAPIView.as_view(), name='vendor-register'),
+    path('register/', VendorRegistrationAPIView.as_view(), name='vendor-register'),
     path('login/', VendorLoginAPIView.as_view(), name='vendor-login'),
 
     path('api/coupons/create/', CreateCouponAPI.as_view(), name='create_coupon_api'),

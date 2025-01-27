@@ -1,7 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
 from authentication.models import Vendor
+import uuid
 
+class Vendor(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='vendor')
+    business_name = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=15, unique=True)
+    email = models.EmailField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    vendor_key = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)  # Auto-generated unique ID
 
 # Base Coupon Model
 class Coupon(models.Model):
@@ -30,10 +39,14 @@ class DiscountCoupon(models.Model):
 class MinPurchaseCoupon(models.Model):
     coupon = models.OneToOneField(Coupon, on_delete=models.CASCADE, related_name="min_purchase_rule")
     minimum_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    reward_type_choices = [
-        ('discount', 'Discount Coupon'),
-        ('coins', 'Coins Reward')
-    ]
-    reward_type = models.CharField(max_length=10, choices=reward_type_choices)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # for discount reward
     coin_reward = models.IntegerField(null=True, blank=True)  # for coin reward
+    
+    def apply_reward(self, total_purchase_amount):
+        if total_purchase_amount >= self.minimum_purchase_amount:
+            if self.discount_amount:
+                return {'reward': 'discount', 'discount_value': self.discount_amount}
+            elif self.coin_reward: 
+                return {'reward': 'coins', 'coins_awarded': self.coin_reward}
+        else:
+            return {'reward': 'none'}

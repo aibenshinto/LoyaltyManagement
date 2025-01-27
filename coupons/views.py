@@ -9,7 +9,55 @@ from django.shortcuts import render
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from wallet.models import CustomerVendor
 from rest_framework.renderers import TemplateHTMLRenderer
+import uuid
 
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import VendorRegistrationSerializer,VendorLoginSerializer
+
+class VendorRegistrationAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = VendorRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # This will call the create() method in the serializer
+            return Response({"message": "Vendor registered successfully"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VendorLoginAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = VendorLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data['username']
+            password = serializer.validated_data['password']
+
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                try:
+                    vendor = Vendor.objects.get(user=user)
+                    if vendor.is_active:
+                        # Generate tokens
+                        refresh = RefreshToken.for_user(user)
+                        return Response({
+                            "refresh": str(refresh),
+                            "access": str(refresh.access_token),
+                        }, status=status.HTTP_200_OK)
+                    else:
+                        return Response({"error": "Vendor account is inactive"}, status=status.HTTP_400_BAD_REQUEST)
+                except Vendor.DoesNotExist:
+                    return Response({"error": "Vendor not found"}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
 
 # API to Create Coupons
 class CreateCouponAPI(APIView):
@@ -51,11 +99,12 @@ class CreateCouponAPI(APIView):
 
 
 # Apply Coupon Logic
-def apply_coupon_logic(coupon_code, total_purchase_amount, vendor_key, user):
+def apply_coupon_logic(coupon_code, total_purchase_amount, business_name, user):
     try:
-        coupon = Coupon.objects.get(code=coupon_code,vendor = vendor_key)
+        vendor = Vendor.objects.get(business_name=business_name)
+        coupon = Coupon.objects.get(code=coupon_code,vendor = vendor)
         
-        if not CustomerVendor.objects.filter(customerid=user, vendorkey=vendor_key).exists():
+        if not CustomerVendor.objects.filter(customerid=user, vendorkey=vendor).exists():
                 return {"valid": False, "message": "You are not a customer of this vendor."}
         
         if coupon.valid_from <= timezone.now() <= coupon.valid_until:
@@ -88,11 +137,11 @@ class ApplyCouponAPI(APIView):
         if serializer.is_valid():
             coupon_code = serializer.validated_data['coupon_code']
             total_purchase_amount = serializer.validated_data['total_price']
-            vendor_key = serializer.validated_data['vendor_key']
+            business_name = serializer.validated_data['business_name']
             user = serializer.validated_data['cust_id']
             
             
-            result = apply_coupon_logic(coupon_code, total_purchase_amount, vendor_key, user)
+            result = apply_coupon_logic(coupon_code, total_purchase_amount, business_name, user)
             
             if result['valid']:
                 return Response({

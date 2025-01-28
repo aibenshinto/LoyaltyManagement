@@ -9,7 +9,7 @@
     <h2>Create a Coupon</h2>
 
     <!-- Form for creating a coupon -->
-    <form id="couponForm" method="POST" action="http://127.0.0.1:8000/create-coupon/">
+    <form id="couponForm" method="POST" action="http://127.0.0.1:8000/coupons/create-coupon/">
         {% csrf_token %}
         <label for="couponType">Coupon Type:</label>
         <select id="couponType" name="coupon_type" required>

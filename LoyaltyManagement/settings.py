@@ -39,13 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authentication',
-    'coupons',
    'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'customerapp',
     'ecommerce',
     'corsheaders',
     'wallet',
+    'coupons',
     
   
 ]

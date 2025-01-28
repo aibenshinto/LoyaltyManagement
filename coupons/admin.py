@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Coupon, DiscountCoupon, BOGOCoupon
+from .models import Coupon, DiscountCoupon, BOGOCoupon, Vendor
 
 # Register Coupon model to manage coupons
 class CouponAdmin(admin.ModelAdmin):
@@ -19,3 +19,4 @@ class BOGOCouponAdmin(admin.ModelAdmin):
     list_display = ('coupon', 'product_to_buy', 'free_product')
 
 admin.site.register(BOGOCoupon, BOGOCouponAdmin)
+admin.site.register(Vendor)

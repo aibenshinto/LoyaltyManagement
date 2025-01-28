@@ -18,13 +18,22 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
+
 class VendorDashboardView(View):
+    authentication_classes = [JWTAuthentication]  # JWT Authentication
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+
     def get(self, request):
+        # If JWT authentication is successful, the user is authenticated
         if not hasattr(request.user, 'vendor_profile'):
             return JsonResponse({'message': 'Unauthorized'}, status=403)
 
-        vendor = Vendor.objects.get(user=request.user)
-        return render(request, 'dashboard.html', {'vendor': vendor})    
+        try:
+            vendor = Vendor.objects.get(user=request.user)  # Get the vendor profile
+            return render(request, 'dashboard.html', {'vendor': vendor})  # Render dashboard
+        except Vendor.DoesNotExist:
+            return JsonResponse({'message': 'Vendor profile not found'}, status=404)
+ 
     
 
 
@@ -63,7 +72,6 @@ class RegisterVendorView(View):
         messages.success(request, 'Vendor registered successfully. Please log in.')
         return redirect('vendor_login')  # Redirect to the login page (use the correct URL name)
 
-
 class VendorLoginView(View):
     def get(self, request):
         return render(request, 'login.html')
@@ -75,18 +83,11 @@ class VendorLoginView(View):
         user = authenticate(request, username=username, password=password)
         if user and hasattr(user, 'vendor_profile'):  # Ensure it's a vendor
             login(request, user)
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Check for AJAX request
-                tokens = self.generate_tokens(user)
-                return JsonResponse({
-                    'message': 'Login successful',
-                    'access_token': tokens['access'],
-                    'redirect_url': '/vendor/dashboard/',
-                }, status=200)
-            return redirect('/vendor/dashboard/')  # Server-side redirection
+            # Generate tokens if needed for other purposes
+            self.generate_tokens(user)  # Tokens are not returned but can be stored or logged if necessary
+            return redirect('/vendor/dashboard/')  # Redirect to dashboard on success
 
         error_message = 'Invalid credentials or not a vendor.'
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # AJAX error
-            return JsonResponse({'message': error_message}, status=400)
         return render(request, 'login.html', {'error': error_message})
 
     @staticmethod
@@ -95,8 +96,7 @@ class VendorLoginView(View):
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-        }    
-    
+        }
 
 from django.contrib.auth import logout
 from django.shortcuts import redirect

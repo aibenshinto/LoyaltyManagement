@@ -4,7 +4,7 @@ from .models import Customer, Cart
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = "__all__"
+        fields = "_all_"
 
 class CartSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)

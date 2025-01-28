@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.views import View
 from .models import Customer, Product, Cart
 from django.contrib.auth.decorators import login_required
-import requests
+# import requests
 from decimal import Decimal
 from django.db import transaction
 

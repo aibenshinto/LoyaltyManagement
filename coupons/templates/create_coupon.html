@@ -9,15 +9,16 @@
     <h2>Create a Coupon</h2>
 
     <!-- Form for creating a coupon -->
-    <form id="couponForm">
+    <form id="couponForm" method="POST" action="http://127.0.0.1:8000/create-coupon/">
+        {% csrf_token %}
         <label for="couponType">Coupon Type:</label>
-        <select id="couponType" name="coupon_type">
+        <select id="couponType" name="coupon_type" required>
             <option value="discount">Discount</option>
             <option value="min_purchase">Min Purchase</option>
         </select><br><br>
 
         <label for="code">Coupon Code:</label>
-        <input type="text" id="code" name="code" required><br><br>
+        <input type="text" id="code" name="code" placeholder="Enter coupon code" required><br><br>
 
         <label for="validFrom">Valid From:</label>
         <input type="datetime-local" id="validFrom" name="valid_from" required><br><br>
@@ -73,9 +74,8 @@
         <button type="submit">Create Coupon</button>
     </form>
 
-    <!-- Script to handle form submission and show/hide fields based on selection -->
+    <!-- Script to show/hide fields based on selection -->
     <script>
-        // Show/hide fields based on coupon type selection
         document.getElementById('couponType').addEventListener('change', function() {
             const couponType = this.value;
             const discountFields = document.getElementById('discountFields');
@@ -118,39 +118,6 @@
                 discountRewardFields.style.display = 'none';
                 coinRewardFields.style.display = 'block';
             }
-        });
-
-        // Form submission logic using fetch API
-        document.getElementById('couponForm').addEventListener('submit', function(event) {
-            event.preventDefault();  // Prevent the form from submitting in the traditional way
-
-            const formData = new FormData(this);
-            const data = {};
-
-            // Convert formData to JSON format
-            formData.forEach((value, key) => {
-                data[key] = value;
-            });
-
-            fetch('http://localhost:8000/api/coupons/create/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Token ' + localStorage.getItem('token')  
-                },
-                body: JSON.stringify(data)  // Send the data as JSON
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);  // Display success message
-                } else {
-                    alert('Error: ' + JSON.stringify(data));  // Display error messages
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
         });
     </script>
 </body>

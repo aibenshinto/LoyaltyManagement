@@ -4,97 +4,43 @@ from django.utils import timezone
 from .models import Coupon,Vendor
 from .serializers import ApplyCouponSerializer, CouponSerializer, DiscountCouponSerializer, MinPurchaseCouponSerializer
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from wallet.models import CustomerVendor
-from rest_framework.renderers import TemplateHTMLRenderer
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 
 
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import VendorRegistrationSerializer,VendorLoginSerializer
-from rest_framework.renderers import TemplateHTMLRenderer
+@login_required(login_url='vendor_login')
+def create_coupon_view(request):
+    if request.method == 'GET':
+        return render(request, 'create_coupon.html')
 
-class VendorRegistrationAPIView(APIView):
-    permission_classes = [AllowAny]
+    elif request.method == 'POST':
+        coupon_type = request.POST.get('coupon_type', '')
 
-    def post(self, request):
-        serializer = VendorRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()  # This will call the create() method in the serializer
-            return Response({"message": "Vendor registered successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class VendorLoginAPIView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = VendorLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                try:
-                    vendor = Vendor.objects.get(user=user)
-                    if vendor.is_active:
-                        # Generate tokens
-                        refresh = RefreshToken.for_user(user)
-                        return Response({
-                            "refresh": str(refresh),
-                            "access": str(refresh.access_token),
-                        }, status=status.HTTP_200_OK)
-                    else:
-                        return Response({"error": "Vendor account is inactive"}, status=status.HTTP_400_BAD_REQUEST)
-                except Vendor.DoesNotExist:
-                    return Response({"error": "Vendor not found"}, status=status.HTTP_404_NOT_FOUND)
-            else:
-                return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
-    
-
-# API to Create Coupons
-class CreateCouponAPI(APIView):
-    renderer_classes = [TemplateHTMLRenderer]
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    template_name = 'create_coupon.html'
-    
-    def get(self, request):
-        print(request.headers)
-        return Response({}, template_name=self.template_name) 
-
-    def post(self, request):
-        coupon_type = request.data.get('coupon_type', '')
-        
         try:
             vendor = Vendor.objects.get(user=request.user)
         except Vendor.DoesNotExist:
-            return Response({"message": "Vendor not found for the current user."}, status=status.HTTP_400_BAD_REQUEST)
+            return render(request, 'create_coupon.html', {"message": "Vendor not found for the current user."})
 
-
-        coupon_serializer = CouponSerializer(data=request.data, context={'request': request})
+        coupon_serializer = CouponSerializer(data=request.POST, context={'request': request})
         if coupon_serializer.is_valid():
             coupon = coupon_serializer.save(vendor=vendor)
 
             if coupon_type == 'discount':
-                discount_serializer = DiscountCouponSerializer(data=request.data, context={'request': request})
+                discount_serializer = DiscountCouponSerializer(data=request.POST, context={'request': request})
                 if discount_serializer.is_valid():
                     discount_coupon = discount_serializer.save(coupon=coupon)
-                    return Response({"message": "Discount coupon created successfully"}, status=status.HTTP_201_CREATED)
+                    return render(request, 'create_coupon.html', {"message": "Discount coupon created successfully"})
+            
             elif coupon_type == 'min_purchase':
-                min_purchase_serializer = MinPurchaseCouponSerializer(data=request.data, context={'request': request})
+                min_purchase_serializer = MinPurchaseCouponSerializer(data=request.POST, context={'request': request})
                 if min_purchase_serializer.is_valid():
                     min_purchase_coupon = min_purchase_serializer.save(coupon=coupon)
-                    return Response({"message": "Min Purchase coupon created successfully"}, status=status.HTTP_201_CREATED)
-            
-            
-        return Response(coupon_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    return render(request, 'create_coupon.html', {"message": "Min Purchase coupon created successfully"})
+        
+        # If form is invalid, return errors
+        return render(request, 'create_coupon.html', {"errors": coupon_serializer.errors})
 
 
 # Apply Coupon Logic

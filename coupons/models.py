@@ -1,64 +1,7 @@
-<<<<<<< HEAD
-from django.db import models
-from django.contrib.auth.models import User
-
-
-class Vendor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    business_name = models.CharField(max_length=100)
-    address = models.TextField()
-
-    def __str__(self):
-        return self.business_name
-
-# Base Coupon Model
-class Coupon(models.Model):
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)  # Assuming each vendor is a user
-    code = models.CharField(max_length=20, unique=True)  # Unique coupon code
-    min_purchase_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    valid_from = models.DateTimeField()
-    valid_until = models.DateTimeField()
-
-    def __str__(self):
-        return f"Coupon for {self.vendor.user} - Code: {self.code}"
-
-# Discount Coupon Model with Specific Rules
-class DiscountCoupon(models.Model):
-    coupon = models.OneToOneField(Coupon, on_delete=models.CASCADE, related_name="discount_rule")
-    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    
-    def get_discount_value(self, total_purchase_amount):
-        if self.discount_amount:
-            return self.discount_amount
-        elif self.discount_percentage:
-            return (self.discount_percentage / 100) * total_purchase_amount
-        return 0
-
-# BOGO Coupon Model with Specific Rules
-class BOGOCoupon(models.Model):
-    coupon = models.OneToOneField(Coupon, on_delete=models.CASCADE, related_name="bogo_rule")
-    product_to_buy = models.CharField(max_length=100)  # Product to buy for the BOGO
-    free_product = models.CharField(max_length=100)  # Free product to be given
-
-    def apply_bogo(self, purchased_products):
-        if self.product_to_buy in purchased_products:
-            return self.free_product
-        return None
-=======
 from django.db import models
 from django.contrib.auth.models import User
 from authentication.models import Vendor
 
-
-# class Vendor(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='vendor')
-#     business_name = models.CharField(max_length=255)
-#     phone_number = models.CharField(max_length=15, unique=True)
-#     email = models.EmailField(unique=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     is_active = models.BooleanField(default=True)
-#     vendor_key = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)  # Auto-generated unique ID
 
 # Base Coupon Model
 class Coupon(models.Model):
@@ -98,4 +41,4 @@ class MinPurchaseCoupon(models.Model):
                 return {'reward': 'coins', 'coins_awarded': self.coin_reward}
         else:
             return {'reward': 'none'}
->>>>>>> 50b8c76e58e92ff6883a001f74cad939c4d001e7
+

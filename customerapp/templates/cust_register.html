@@ -37,7 +37,12 @@
                         <label for="referral_code" class="form-label">Enter Referral Code (Optional)</label>
                         <input type="text" name="referral_code" class="form-control">
                     </div>
-                    
+                    {% if messages %}
+                        <div class="alert alert-info" role="alert">
+                            {{ messages }}
+                        </div>
+                    {% endif %}
+
                     <button type="submit" class="btn btn-primary w-100">Register</button>
                 </form>
             </div>

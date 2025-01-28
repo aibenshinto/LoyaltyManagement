@@ -78,6 +78,7 @@ def apply_coupon_logic(coupon_code, total_purchase_amount, business_name, user):
 # Apply Coupon API
 class ApplyCouponAPI(APIView):
     def post(self, request):
+        print("coupon:",request.data)
         serializer = ApplyCouponSerializer(data=request.data)
         if serializer.is_valid():
             coupon_code = serializer.validated_data['coupon_code']
@@ -100,3 +101,4 @@ class ApplyCouponAPI(APIView):
                     'message': result['message']
                 }, status=400)
         return Response(serializer.errors, status=400)
+

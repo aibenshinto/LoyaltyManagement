@@ -1,3 +1,4 @@
+
 """
 URL configuration for LoyaltyManagement project.
 
@@ -24,3 +25,4 @@ urlpatterns = [
     path('', include('wallet.urls')),
     path('coupons/',include('coupons.urls')),
 ]
+

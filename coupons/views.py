@@ -8,8 +8,6 @@ from wallet.models import CustomerVendor
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
-
-
 @login_required(login_url='vendor_login')
 def create_coupon_view(request):
     if request.method == 'GET':
@@ -17,6 +15,7 @@ def create_coupon_view(request):
 
     elif request.method == 'POST':
         coupon_type = request.POST.get('coupon_type', '')
+        reward_type = request.POST.get('reward_type', '')  # Get reward type from the form
 
         try:
             vendor = Vendor.objects.get(user=request.user)
@@ -34,7 +33,17 @@ def create_coupon_view(request):
                     return render(request, 'create_coupon.html', {"message": "Discount coupon created successfully"})
             
             elif coupon_type == 'min_purchase':
-                min_purchase_serializer = MinPurchaseCouponSerializer(data=request.POST, context={'request': request})
+                min_purchase_data = {
+                    'minimum_purchase_amount': request.POST.get('minimum_purchase_amount'),
+                }
+
+                # Handle reward type logic
+                if reward_type == 'discount':
+                    min_purchase_data['discount_amount'] = request.POST.get('discount_reward_amount')
+                elif reward_type == 'coins':
+                    min_purchase_data['coin_reward'] = request.POST.get('coin_reward')
+
+                min_purchase_serializer = MinPurchaseCouponSerializer(data=min_purchase_data, context={'request': request})
                 if min_purchase_serializer.is_valid():
                     min_purchase_coupon = min_purchase_serializer.save(coupon=coupon)
                     return render(request, 'create_coupon.html', {"message": "Min Purchase coupon created successfully"})

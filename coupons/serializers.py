@@ -36,6 +36,7 @@ class MinPurchaseCouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = MinPurchaseCoupon
         fields = ['minimum_purchase_amount', 'discount_amount', 'coin_reward']
+        
 
 class ApplyCouponSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(max_length=20)

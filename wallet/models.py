@@ -17,3 +17,4 @@ class Wallet(models.Model):
 
     def __str__(self):
         return self.customer_vendor
+    

@@ -31,6 +31,7 @@ class RequestCustomerDataView(APIView):
         return Response({"customers": customers}, status=status.HTTP_200_OK)
 
     def post(self, request):
+        print("wallet : ",request.data)
         serializer = CustomerDataSerializer(data=request.data)
         if serializer.is_valid():
             customer_id = serializer.validated_data['customer_id']

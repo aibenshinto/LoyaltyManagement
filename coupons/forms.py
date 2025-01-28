@@ -1,28 +1,10 @@
+
 from django import forms
 from .models import Coupon,DiscountCoupon,BOGOCoupon
 from .models import Vendor
 from django.contrib.auth.models import User
 
-class VendorRegistrationForm(forms.ModelForm):
-    username = forms.CharField(max_length=150)
-    password = forms.CharField(widget=forms.PasswordInput)
-    email = forms.EmailField()
 
-    class Meta:
-        model = Vendor
-        fields = ['business_name', 'address']
-
-    def save(self, commit=True):
-        user = User.objects.create_user(
-            username=self.cleaned_data['username'],
-            email=self.cleaned_data['email'],
-            password=self.cleaned_data['password']
-        )
-        vendor = super().save(commit=False)
-        vendor.user = user
-        if commit:
-            vendor.save()
-        return vendor
 
 class CouponForm(forms.ModelForm):
     class Meta:

@@ -16,6 +16,7 @@ import json
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
+
 def generate_jwt_tokens(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -55,21 +56,20 @@ class CustomerRegisterView(View):
                 referral_code=referral_code
             )
 
+
+                                # Prepare the payload for the API request
             payload = {
                 'customer_id': customer.id,
                 'business_name': business_name,
                 'referral_code': referral_code  # This will be None if not provided
             }
-            print("Sending data to API:", payload)
 
             # Make the API call to send customer data
             response = requests.post(
                 'http://127.0.0.1:8000/api/customer-data/',
                 json=payload
             )
-
-            print("API response status:", response.status_code)  # Log the response status
-            print("API response data:", response.json())  
+            # print(payload)
         
 
 
@@ -82,7 +82,6 @@ class CustomerRegisterView(View):
             return HttpResponse("Unable to complete registration. Please try again.", status=500)
 
         return redirect('cust_login')
-
 
 class LoginView(View):
     def get(self, request):
@@ -194,21 +193,28 @@ class CheckoutView(LoginRequiredMixin, View):
         coupon_code = request.POST.get('coupon_code')
         discount = 0
         final_price = total_price
+        business_name = "Allen solly"
 
         # Prepare the data for API request
         coupon_data = {
             'coupon_code': coupon_code,
-            'total_price': total_price
+            'total_price': float(total_price),
+            'business_name': business_name,
+            'cust_id': str(customer.id)
+            
         }
 
         # Send the request to the coupons API
         try:
-            response = requests.post('http://127.0.0.1:8000/api/coupons/apply/', data=coupon_data)
+            response = requests.post(
+                'http://127.0.0.1:8000/coupons/api/coupons/apply/',
+                json=coupon_data
+            )
             if response.status_code == 200:
                 result = response.json()
                 if result.get('success'):
-                    discount = result.get('discount_value', 0)
-                    final_price = total_price - Decimal(discount)
+                    discount = Decimal(result.get('discount_value', 0))
+                    final_price = total_price - discount
                 else:
                     # If coupon is invalid or expired
                     error_message = result.get('message', 'Invalid coupon')
@@ -228,6 +234,7 @@ class CheckoutView(LoginRequiredMixin, View):
         })
 
     
+
 class WalletView(LoginRequiredMixin, View):
     def get(self, request):
         # Assuming user is authenticated and linked to a Customer instance

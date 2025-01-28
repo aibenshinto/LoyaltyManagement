@@ -1,5 +1,5 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+import stripe 
+from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -8,7 +8,6 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
 from .models import Customer, Product, Cart
-from django.contrib.auth.decorators import login_required
 import requests
 from decimal import Decimal
 from django.db import transaction
@@ -109,7 +108,7 @@ class LogoutView(View):
         return redirect('cust_login')
 
 
-class ProductListView(View):
+class ProductListView(LoginRequiredMixin,View):
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect('cust_login')
@@ -237,34 +236,40 @@ class CheckoutView(LoginRequiredMixin, View):
 
 class WalletView(LoginRequiredMixin, View):
     def get(self, request):
-        # Assuming user is authenticated and linked to a Customer instance
-        customer = request.user.customer  # Ensure the user has a related Customer
+        # Assuming the user is authenticated
+        customer = request.user.customer  # Retrieve the Customer instance linked to the User
 
-        # Call the wallet API to fetch wallet balance
         try:
-            response = requests.get(
-                'http://127.0.0.1:8000/api/customer-data/',
-                params={'customer_id': customer.id}  # Send the customer_id as a parameter
-            )
+            # Make a GET request to the API to retrieve all customers' wallet data
+            response = requests.get('http://127.0.0.1:8000/api/customer-data/')
 
             if response.status_code == 200:
-                wallet_data = response.json()
+                wallet_data = response.json()  # Parse the JSON response
+                # print(f"Wallet data retrieved: {wallet_data}")  # Debugging: Print full wallet data
 
-                # Extract the wallet data for the current customer
+                # Find the wallet data for the signed-in customer
                 customer_wallet = next(
-                    (item for item in wallet_data['customers'] if item['customer_id'] == customer.id),
+                    (item for item in wallet_data['customers'] if int(item['customer_id']) == customer.id),
                     None
                 )
+                print(f"Customer wallet data: {customer_wallet}")  # Debugging: Print matched customer wallet data
 
                 if customer_wallet:
-                    balance = customer_wallet.get('coins', 0)
+                    balance = customer_wallet.get('coins', 0)  # Retrieve the coin balance
+                    referral_code = customer_wallet.get('referral_code', 'N/A')  # Retrieve referral code
+                    print(f"Customer referral code: {referral_code}")  # Debugging: Print referral code
                 else:
-                    balance = "Error: Wallet data not found."
+                    balance = "Error: Wallet data for the customer not found"
+                    referral_code = "Error: Referral code not found"
             else:
-                balance = "Error: Unable to retrieve wallet balance."
+                balance = "Error retrieving wallet data from the API"
+                referral_code = "Error retrieving referral code"
+                print(f"API response error: {response.status_code}")  # Debugging: Print API error status code
 
         except requests.exceptions.RequestException as e:
-            balance = f"Error: Unable to connect to the wallet API. ({str(e)})"
+            balance = f"Error connecting to wallet API: {e}"
+            referral_code = "Error connecting to wallet API"
+            print(balance)  # Debugging: Log connection error
 
-        # Render the wallet template with the balance
-        return render(request, 'wallet.html', {'balance': balance})
+        # Render the wallet page with the balance and referral code
+        return render(request, 'wallet.html', {'balance': balance, 'referral_code': referral_code})

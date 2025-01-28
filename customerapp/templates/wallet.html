@@ -1,4 +1,4 @@
-{% comment %} <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,13 +12,42 @@
         
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Your Wallet Balance</h5>
+                <h5 class="card-title">Your Wallet</h5>
                 <p class="card-text">Balance: ${{ balance }}</p>
+                <p class="card-text">
+                    Referral Code: <strong id="referralCode">{{ referral_code }}</strong>
+                </p>
                 
+                <!-- Copy to Clipboard Button -->
+                <button class="btn btn-primary mt-3" onclick="copyToClipboard()">Copy Referral Code</button>
             </div>
         </div>
 
         <a href="{% url 'product-list' %}" class="btn btn-info mt-4">Back to Products</a>
     </div>
+
+    <script>
+        function copyToClipboard() {
+            // Get the referral code from the page
+            const referralCode = document.getElementById('referralCode').innerText;
+
+            // Create a temporary input element to copy the text
+            const tempInput = document.createElement('input');
+            tempInput.value = referralCode;
+
+            // Append the temporary input to the document body
+            document.body.appendChild(tempInput);
+
+            // Select and copy the text
+            tempInput.select();
+            document.execCommand('copy');
+
+            // Remove the temporary input element
+            document.body.removeChild(tempInput);
+
+            // Alert the user
+            alert('Referral Code copied to clipboard: ' + referralCode);
+        }
+    </script>
 </body>
-</html> {% endcomment %}
+</html>

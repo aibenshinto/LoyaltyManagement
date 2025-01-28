@@ -76,3 +76,4 @@ def vendor_dashboard(request):
 def logout_vendor(request):
     logout(request)  # Logs the user out
     return redirect('vendor_login')  # Redirect to the login page
+

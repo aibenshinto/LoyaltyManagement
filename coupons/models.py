@@ -3,15 +3,6 @@ from django.contrib.auth.models import User
 from authentication.models import Vendor
 
 
-# class Vendor(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='vendor')
-#     business_name = models.CharField(max_length=255)
-#     phone_number = models.CharField(max_length=15, unique=True)
-#     email = models.EmailField(unique=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     is_active = models.BooleanField(default=True)
-#     vendor_key = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)  # Auto-generated unique ID
-
 # Base Coupon Model
 class Coupon(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)  
@@ -50,3 +41,4 @@ class MinPurchaseCoupon(models.Model):
                 return {'reward': 'coins', 'coins_awarded': self.coin_reward}
         else:
             return {'reward': 'none'}
+

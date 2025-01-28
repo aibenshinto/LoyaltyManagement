@@ -16,6 +16,7 @@ import json
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
+
 def generate_jwt_tokens(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -27,7 +28,7 @@ def generate_jwt_tokens(user):
 class CustomerRegisterView(View):
     def get(self, request):
         return render(request, 'cust_register.html')
-
+    
     def post(self, request):
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -35,7 +36,7 @@ class CustomerRegisterView(View):
         phone = request.POST.get('phone_number')
         email = request.POST.get('email') 
         referral_code = request.POST.get('referral_code', None)  
-        business_name = "Aish Bakers"
+        business_name = "Allen solly"
 
         if not username or not password:
             return HttpResponse("Username and password are required.", status=400)
@@ -55,14 +56,7 @@ class CustomerRegisterView(View):
                 referral_code=referral_code
             )
 
-                # response = requests.post(
-                #     'http://127.0.0.1:8000/api/customer-data/',  # Adjust URL if necessary
-                #     json={
-                #         'customer_id': customer.id,
-                #         'business1_name': business_name,
-                #         'referral_code': referral_code  # This will be None if not provided
-                #     }
-                # )
+
                                 # Prepare the payload for the API request
             payload = {
                 'customer_id': customer.id,
@@ -75,7 +69,7 @@ class CustomerRegisterView(View):
                 'http://127.0.0.1:8000/api/customer-data/',
                 json=payload
             )
-            print(payload)
+            # print(payload)
         
 
 
@@ -199,21 +193,28 @@ class CheckoutView(LoginRequiredMixin, View):
         coupon_code = request.POST.get('coupon_code')
         discount = 0
         final_price = total_price
+        business_name = "Allen solly"
 
         # Prepare the data for API request
         coupon_data = {
             'coupon_code': coupon_code,
-            'total_price': total_price
+            'total_price': float(total_price),
+            'business_name': business_name,
+            'cust_id': str(customer.id)
+            
         }
 
         # Send the request to the coupons API
         try:
-            response = requests.post('http://127.0.0.1:8000/api/coupons/apply/', data=coupon_data)
+            response = requests.post(
+                'http://127.0.0.1:8000/coupons/api/coupons/apply/',
+                json=coupon_data
+            )
             if response.status_code == 200:
                 result = response.json()
                 if result.get('success'):
-                    discount = result.get('discount_value', 0)
-                    final_price = total_price - Decimal(discount)
+                    discount = Decimal(result.get('discount_value', 0))
+                    final_price = total_price - discount
                 else:
                     # If coupon is invalid or expired
                     error_message = result.get('message', 'Invalid coupon')
@@ -234,3 +235,36 @@ class CheckoutView(LoginRequiredMixin, View):
 
     
 
+class WalletView(LoginRequiredMixin, View):
+    def get(self, request):
+        # Assuming user is authenticated and linked to a Customer instance
+        customer = request.user.customer  # Ensure the user has a related Customer
+
+        # Call the wallet API to fetch wallet balance
+        try:
+            response = requests.get(
+                'http://127.0.0.1:8000/api/customer-data/',
+                params={'customer_id': customer.id}  # Send the customer_id as a parameter
+            )
+
+            if response.status_code == 200:
+                wallet_data = response.json()
+
+                # Extract the wallet data for the current customer
+                customer_wallet = next(
+                    (item for item in wallet_data['customers'] if item['customer_id'] == customer.id),
+                    None
+                )
+
+                if customer_wallet:
+                    balance = customer_wallet.get('coins', 0)
+                else:
+                    balance = "Error: Wallet data not found."
+            else:
+                balance = "Error: Unable to retrieve wallet balance."
+
+        except requests.exceptions.RequestException as e:
+            balance = f"Error: Unable to connect to the wallet API. ({str(e)})"
+
+        # Render the wallet template with the balance
+        return render(request, 'wallet.html', {'balance': balance})

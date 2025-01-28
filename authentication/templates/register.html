@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,3 +103,43 @@
     
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Registration</title>
+</head>
+<body>
+    <h1>Vendor Registration</h1>
+    {% if messages %}
+        <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <label for="username">Username:</label>
+        <input type="text" name="username" required><br>
+
+        <label for="password">Password:</label>
+        <input type="password" name="password" required><br>
+
+        <label for="business_name">Business Name:</label>
+        <input type="text" name="business_name" required><br>
+
+        <label for="phone_number">Phone Number:</label>
+        <input type="text" name="phone_number" required><br>
+
+        <label for="email">Email:</label>
+        <input type="email" name="email" required><br>
+
+        <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'vendor_login' %}">Login</a></p>
+</body>
+</html>
+>>>>>>> 50b8c76e58e92ff6883a001f74cad939c4d001e7

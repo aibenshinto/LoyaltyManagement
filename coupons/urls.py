@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from django.urls import path
 from .views import VendorRegisterAPI, VendorLoginAPI, CreateCouponAPI, ApplyCouponAPI, TokenRefreshAPI
 
@@ -8,3 +9,14 @@ urlpatterns = [
     path('api/coupons/apply/', ApplyCouponAPI.as_view(), name='apply_coupon_api'),
     path('api/token/refresh/', TokenRefreshAPI.as_view(), name='token_refresh'),
 ]
+=======
+from django.urls import path
+from .views import  ApplyCouponAPI
+from . import views
+urlpatterns = [
+
+    path('create-coupon/', views.create_coupon_view, name='create_coupon'),
+    path('api/coupons/apply/', ApplyCouponAPI.as_view(), name='apply_coupon_api'),
+
+]
+>>>>>>> 50b8c76e58e92ff6883a001f74cad939c4d001e7

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,3 +150,25 @@
    
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ vendor.business_name }}</h1>
+    <p>Email: {{ vendor.email }}</p>
+    <p>Phone Number: {{ vendor.phone_number }}</p>
+
+    <!-- Create Coupon Button -->
+    <a href="{% url 'create_coupon' %}">
+        <button>Create Coupon</button>
+    </a>
+
+    <a href="{% url 'vendor_logout' %}">Logout</a>
+</body>
+</html>
+>>>>>>> 50b8c76e58e92ff6883a001f74cad939c4d001e7

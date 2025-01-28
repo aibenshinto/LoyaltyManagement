@@ -18,3 +18,4 @@ admin.site.register(DiscountCoupon, DiscountCouponAdmin)
 class BOGOCouponAdmin(admin.ModelAdmin):
     list_display = ('coupon', 'product_to_buy', 'free_product')
 
+

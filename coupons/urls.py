@@ -7,3 +7,4 @@ urlpatterns = [
     path('api/coupons/apply/', ApplyCouponAPI.as_view(), name='apply_coupon_api'),
 
 ]
+

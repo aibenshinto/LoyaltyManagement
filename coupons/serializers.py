@@ -1,40 +1,7 @@
 from rest_framework import serializers
 from .models import Vendor, Coupon, DiscountCoupon, MinPurchaseCoupon
-from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 
-
-class VendorRegistrationSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
-    business_name = serializers.CharField(max_length=255)
-    phone_number = serializers.CharField(max_length=15)
-    email = serializers.EmailField()
-
-    class Meta:
-        model = Vendor
-        fields = ['username', 'password', 'business_name', 'phone_number', 'email']
-
-    def create(self, validated_data):
-        # Create a User instance
-        user = User.objects.create(
-            username=validated_data['username'],
-            password=make_password(validated_data['password']),  # Hashing the password
-        )
-
-        # Create the Vendor instance associated with the User
-        vendor = Vendor.objects.create(
-            user=user,
-            business_name=validated_data['business_name'],
-            phone_number=validated_data['phone_number'],
-            email=validated_data['email'],
-        )
-        return vendor
-    
-
-class VendorLoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
 
 
 class  CouponSerializer(serializers.ModelSerializer):
@@ -43,7 +10,7 @@ class  CouponSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Coupon
-        fields = '__all__'
+        fields = "__all__"
 
     def create(self, validated_data):
         # Get the logged-in user from the request context
@@ -69,11 +36,10 @@ class MinPurchaseCouponSerializer(serializers.ModelSerializer):
     class Meta:
         model = MinPurchaseCoupon
         fields = ['minimum_purchase_amount', 'discount_amount', 'coin_reward']
+        
 
-   
 class ApplyCouponSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(max_length=20)
     total_price = serializers.DecimalField(max_digits=10,decimal_places=2)
     business_name = serializers.CharField(max_length=20)
     cust_id = serializers.CharField(max_length=20)
-

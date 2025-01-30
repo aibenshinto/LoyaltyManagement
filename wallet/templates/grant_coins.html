@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Grant Coins</title>
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+   <style>
+       /* Background Styling */
+       body {
+           font-family: 'Poppins', sans-serif;
+           background: linear-gradient(135deg, #f8f9fc, #e3e7ed);
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           height: 100vh;
+       }
+
+
+       /* Card Styling */
+       .card {
+           width: 520px;
+           padding: 40px;
+           border-radius: 15px;
+           border: none;
+           background: #ffffff;
+           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+           text-align: center;
+       }
+
+
+       /* Title Styling */
+       .card h3 {
+           font-weight: 700;
+           color: #333;
+           margin-bottom: 20px;
+       }
+
+
+       /* Input Fields */
+       .form-control, .form-select {
+           border-radius: 8px;
+           padding: 12px;
+           font-size: 16px;
+       }
+
+
+       .form-label {
+           font-weight: 600;
+           color: #555;
+           text-align: left;
+           display: block;
+           margin-bottom: 6px;
+       }
+
+
+       /* Button Styling */
+       .btn-primary {
+           background-color: #007bff;
+           border: none;
+           font-weight: 600;
+           font-size: 18px;
+           padding: 12px;
+           border-radius: 8px;
+           transition: 0.3s ease-in-out;
+       }
+
+
+       .btn-primary:hover {
+           background-color: #0056b3;
+           transform: scale(1.05);
+       }
+
+
+       /* Success Message */
+       .alert {
+           border-radius: 8px;
+           font-size: 16px;
+           padding: 10px;
+       }
+   </style>
+</head>
+<body>
+
+
+   <!-- Grant Coins Card -->
+   <div class="card">
+       <h3>🎁 Grant Loyalty Coins</h3>
+
+
+       <!-- Success Message -->
+       {% if messages %}
+           {% for message in messages %}
+               <div class="alert alert-success" role="alert">
+                   {{ message }}
+               </div>
+           {% endfor %}
+       {% endif %}
+
+
+       <form method="post">
+           {% csrf_token %}
+
+
+           <!-- Customer Selection -->
+           <div class="mb-4">
+               <label for="customer_id" class="form-label">Select Customer:</label>
+               <select name="customer_id" class="form-select" required>
+                   <option value="">-- Choose a Customer --</option>
+                   {% for customer in customers %}
+                       <option value="{{ customer.customerid }}">{{ customer.customerid }}</option>
+                   {% endfor %}
+               </select>
+           </div>
+
+
+           <!-- Coin Input -->
+           <div class="mb-4">
+               <label for="coins" class="form-label">Enter Coins:</label>
+               <input type="number" name="coins" class="form-control" min="1" required>
+           </div>
+
+
+           <!-- Submit Button -->
+           <button type="submit" class="btn btn-primary w-100">Grant Coins</button>
+       </form>
+   </div>
+
+
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -15,7 +15,5 @@ class DiscountCouponAdmin(admin.ModelAdmin):
 
 admin.site.register(DiscountCoupon, DiscountCouponAdmin)
 
-class BOGOCouponAdmin(admin.ModelAdmin):
-    list_display = ('coupon', 'product_to_buy', 'free_product')
-
-
+class MinPurchaseCouponsAdmin(admin.ModelAdmin):
+    list_display = ('coupon','minimum_purchase_amount','discount_amount','coin_reward')

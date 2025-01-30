@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Loyalty Management</title>
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+   <style>
+       .section-title {
+           color: #333;
+           border-bottom: 2px solid #eee;
+           padding-bottom: 8px;
+           margin-bottom: 20px;
+       }
+       .container {
+           max-width: 900px;
+           padding: 30px;
+       }
+       .form-label {
+           font-weight: 500;
+       }
+       .alert {
+           margin-top: 20px;
+       }
+       .delete-rule {
+           min-width: 80px;
+       }
+   </style>
+</head>
+<body class="bg-light">
+   <div class="container bg-white shadow-sm rounded">
+       <div class="page-header">
+           <!-- Back Button -->
+           <a href="{% url 'vendor_dashboard' %}" class="btn btn-outline-primary back-button">
+               <i class="bi bi-arrow-left"></i> Back to Dashboard
+           </a>
+       </div>
+   <div class="container bg-white shadow-sm rounded">
+       <h1 class="text-center mb-4">Loyalty Management Configuration</h1>
+
+
+       {% if messages %}
+       <div id="alertContainer">
+           {% for message in messages %}
+           <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+               {{ message }}
+               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+           </div>
+           {% endfor %}
+       </div>
+       {% endif %}
+
+
+       <form method="POST" action="{% url 'loyalty_configuration' %}">
+           {% csrf_token %}
+          
+           <!-- Signup Bonus Section -->
+           <div class="mt-4">
+               <h5 class="section-title">Signup Bonus</h5>
+               <div class="mb-3">
+                   <label for="signupBonusCoins" class="form-label">Number of Coins:</label>
+                   <input type="number"
+                          id="signupBonusCoins"
+                          name="signupBonusCoins"
+                          class="form-control"
+                          min="1"
+                          value="{{ config.signup_bonus_coins|default:'' }}"
+                          placeholder="Enter coins for signup bonus"
+                          required>
+               </div>
+           </div>
+
+
+           <!-- Purchase Rewards Section -->
+           <div class="mt-4">
+               <h5 class="section-title">Purchase Rewards</h5>
+               <div id="purchaseRulesContainer">
+                   {% if purchase_rules %}
+                       {% for rule in purchase_rules %}
+                       <div class="row mb-3" data-rule-id="{{ rule.id }}">
+                           <div class="col">
+                               <label class="form-label">Amount:</label>
+                               <input type="number"
+                                      name="purchaseRules[{{ forloop.counter0 }}][amount]"
+                                      class="form-control"
+                                      value="{{ rule.amount }}"
+                                      min="1"
+                                      step="0.01"
+                                      required>
+                           </div>
+                           <div class="col">
+                               <label class="form-label">Coins:</label>
+                               <input type="number"
+                                      name="purchaseRules[{{ forloop.counter0 }}][coins]"
+                                      class="form-control"
+                                      value="{{ rule.coins }}"
+                                      min="1"
+                                      required>
+                           </div>
+                           <div class="col-auto d-flex align-items-end">
+                               <button type="button"
+                                       class="btn btn-danger mb-3 delete-rule"
+                                       data-rule-id="{{ rule.id }}">
+                                   Delete
+                               </button>
+                           </div>
+                       </div>
+                       {% endfor %}
+                   {% endif %}
+               </div>
+               <button type="button" id="addRuleButton" class="btn btn-primary mt-3">
+                   <i class="bi bi-plus-circle me-2"></i>Add Rule
+               </button>
+           </div>
+
+
+           <!-- Referral Bonus Section -->
+           <div class="mt-4">
+               <h5 class="section-title">Referral Bonus</h5>
+               <div class="mb-3">
+                   <label for="refereeBonusCoins" class="form-label">Coins for Referee:</label>
+                   <input type="number"
+                          id="refereeBonusCoins"
+                          name="refereeBonusCoins"
+                          class="form-control"
+                          min="1"
+                          value="{{ config.referee_bonus_coins|default:'' }}"
+                          placeholder="Enter coins for the referee"
+                          required>
+               </div>
+
+
+               <div class="mb-3">
+                   <label for="referrerBonusCoins" class="form-label">Coins for Referrer:</label>
+                   <input type="number"
+                          id="referrerBonusCoins"
+                          name="referrerBonusCoins"
+                          class="form-control"
+                          min="1"
+                          value="{{ config.referrer_bonus_coins|default:'' }}"
+                          placeholder="Enter coins for the referrer"
+                          required>
+               </div>
+           </div>
+
+
+           <!-- Coin Value and Currency Section -->
+           <div class="mt-4">
+               <h5 class="section-title">Coin Value and Currency</h5>
+               <div class="row">
+                   <div class="col">
+                       <label for="coinValue" class="form-label">Coin Value:</label>
+                       <input type="number"
+                              id="coinValue"
+                              name="coinValue"
+                              class="form-control"
+                              min="1"
+                              step="0.01"
+                              value="{{ config.coin_value|default:'' }}"
+                              placeholder="Enter coin value"
+                              required>
+                   </div>
+                   <div class="col">
+                       <label for="currency" class="form-label">Currency:</label>
+                       <select id="currency" name="currency" class="form-select" required>
+                           <option value="" disabled {% if not config.currency %}selected{% endif %}>Select a currency</option>
+                           <option value="USD" {% if config.currency == 'USD' %}selected{% endif %}>USD</option>
+                           <option value="EUR" {% if config.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                           <option value="INR" {% if config.currency == 'INR' %}selected{% endif %}>INR</option>
+                           <option value="GBP" {% if config.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                           <option value="AUD" {% if config.currency == 'AUD' %}selected{% endif %}>AUD</option>
+                           <option value="CAD" {% if config.currency == 'CAD' %}selected{% endif %}>CAD</option>
+                       </select>
+                   </div>
+               </div>
+           </div>
+
+
+           <!-- Submit Button -->
+           <div class="text-center mt-5 mb-3">
+               <button type="submit" class="btn btn-success btn-lg px-5">
+                   Save Configuration
+               </button>
+           </div>
+       </form>
+   </div>
+
+
+   <!-- Scripts -->
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+   <script>
+       document.addEventListener('DOMContentLoaded', () => {
+           const addRuleButton = document.getElementById('addRuleButton');
+           const purchaseRulesContainer = document.getElementById('purchaseRulesContainer');
+           let ruleIndex = {% if purchase_rules %}{{ purchase_rules|length }}{% else %}0{% endif %};
+  
+           // Function to update all input names with correct indices
+           function updateInputIndices() {
+               const rows = purchaseRulesContainer.querySelectorAll('.row');
+               rows.forEach((row, index) => {
+                   const amountInput = row.querySelector('input[name*="[amount]"]');
+                   const coinsInput = row.querySelector('input[name*="[coins]"]');
+  
+                   if (amountInput) {
+                       amountInput.name = `purchaseRules[${index}][amount]`;
+                   }
+                   if (coinsInput) {
+                       coinsInput.name = `purchaseRules[${index}][coins]`;
+                   }
+               });
+               ruleIndex = rows.length;
+           }
+  
+           // Function to create new rule row
+           function addPurchaseRule() {
+               const ruleRow = document.createElement('div');
+               ruleRow.classList.add('row', 'mb-3');
+  
+               // Amount Column
+               const amountCol = document.createElement('div');
+               amountCol.classList.add('col');
+               const amountLabel = document.createElement('label');
+               amountLabel.classList.add('form-label');
+               amountLabel.textContent = 'Amount:';
+               const amountInput = document.createElement('input');
+               amountInput.type = 'number';
+               amountInput.name = `purchaseRules[${ruleIndex}][amount]`;
+               amountInput.classList.add('form-control');
+               amountInput.placeholder = 'Amount';
+               amountInput.min = '1';
+               amountInput.step = '0.01';
+               amountInput.required = true;
+  
+               // Coins Column
+               const coinsCol = document.createElement('div');
+               coinsCol.classList.add('col');
+               const coinsLabel = document.createElement('label');
+               coinsLabel.classList.add('form-label');
+               coinsLabel.textContent = 'Coins:';
+               const coinsInput = document.createElement('input');
+               coinsInput.type = 'number';
+               coinsInput.name = `purchaseRules[${ruleIndex}][coins]`;
+               coinsInput.classList.add('form-control');
+               coinsInput.placeholder = 'Coins';
+               coinsInput.min = '1';
+               coinsInput.required = true;
+  
+               // Delete Button Column
+               const deleteCol = document.createElement('div');
+               deleteCol.classList.add('col-auto', 'd-flex', 'align-items-end');
+               const deleteButton = document.createElement('button');
+               deleteButton.type = 'button';
+               deleteButton.classList.add('btn', 'btn-danger', 'mb-3', 'delete-rule');
+               deleteButton.textContent = 'Delete';
+  
+               // Add delete functionality
+               deleteButton.addEventListener('click', function() {
+                   ruleRow.remove();
+                   updateInputIndices();
+               });
+  
+               // Assemble the row
+               amountCol.appendChild(amountLabel);
+               amountCol.appendChild(amountInput);
+               coinsCol.appendChild(coinsLabel);
+               coinsCol.appendChild(coinsInput);
+               deleteCol.appendChild(deleteButton);
+               ruleRow.appendChild(amountCol);
+               ruleRow.appendChild(coinsCol);
+               ruleRow.appendChild(deleteCol);
+               purchaseRulesContainer.appendChild(ruleRow);
+  
+               ruleIndex++;
+           }
+  
+           // Function to handle deletion of existing rules
+           function setupDeleteHandlers() {
+               document.querySelectorAll('.delete-rule').forEach(button => {
+                   button.addEventListener('click', async function() {
+                       const ruleId = this.dataset.ruleId;
+                       if (ruleId) {
+                           try {
+                               const response = await fetch(`/delete-purchase-rule/${ruleId}/`, {
+                                   method: 'DELETE',
+                                   headers: {
+                                       'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                   }
+                               });
+  
+                               if (response.ok) {
+                                   const ruleRow = this.closest('.row');
+                                   ruleRow.remove();
+                                   updateInputIndices();  // Update indices after deletion
+  
+                                   // Show success message
+                                   const alert = document.createElement('div');
+                                   alert.classList.add('alert', 'alert-success', 'alert-dismissible', 'fade', 'show');
+                                   alert.innerHTML = `
+                                       Rule deleted successfully
+                                       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                   `;
+                                   document.getElementById('alertContainer').appendChild(alert);
+                               } else {
+                                   throw new Error('Failed to delete rule');
+                               }
+                           } catch (error) {
+                               console.error('Error:', error);
+                               // Show error message
+                               const alert = document.createElement('div');
+                               alert.classList.add('alert', 'alert-danger', 'alert-dismissible', 'fade', 'show');
+                               alert.innerHTML = `
+                                   Error deleting rule. Please try again.
+                                   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                               `;
+                               document.getElementById('alertContainer').appendChild(alert);
+                           }
+                       } else {
+                           // For newly added rules that don't have an ID yet
+                           const ruleRow = this.closest('.row');
+                           ruleRow.remove();
+                           updateInputIndices();  // Update indices after deletion
+                       }
+                   });
+               });
+           }
+  
+           // Set up event listeners
+           addRuleButton.addEventListener('click', addPurchaseRule);
+           setupDeleteHandlers();
+  
+           document.querySelector('form').addEventListener('submit', function(e) {
+               updateInputIndices();  // Ensure indices are correct before submission
+           });
+  
+           // Auto-dismiss alerts after 5 seconds
+           const autoHideAlerts = () => {
+               document.querySelectorAll('.alert').forEach(alert => {
+                   setTimeout(() => {
+                       const bsAlert = new bootstrap.Alert(alert);
+                       bsAlert.close();
+                   }, 5000);
+               });
+           };
+           autoHideAlerts();
+       });
+   </script>
+</body>
+</html>

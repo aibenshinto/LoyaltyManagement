@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Coupon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f5f7;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .form-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group label {
+            font-weight: bold;
+            color: #555;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="form-container">
+                    <h2 class="text-center">Create a Coupon</h2>
+                    <form id="couponForm" method="POST" action="http://127.0.0.1:8000/coupons/create-coupon/">
+                        {% csrf_token %}
+                        
+                        <!-- Coupon Type -->
+                        <div class="mb-3">
+                            <label for="couponType" class="form-label">Coupon Type:</label>
+                            <select id="couponType" name="coupon_type" class="form-select" required>
+                                <option value="discount">Discount</option>
+                                <option value="min_purchase">Min Purchase</option>
+                            </select>
+                        </div>
+
+                        <!-- Coupon Code -->
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Coupon Code:</label>
+                            <input type="text" id="code" name="code" class="form-control" placeholder="Enter coupon code" required>
+                        </div>
+
+                        <!-- Valid From -->
+                        <div class="mb-3">
+                            <label for="validFrom" class="form-label">Valid From:</label>
+                            <input type="datetime-local" id="validFrom" name="valid_from" class="form-control" required>
+                        </div>
+
+                        <!-- Valid Until -->
+                        <div class="mb-3">
+                            <label for="validUntil" class="form-label">Valid Until:</label>
+                            <input type="datetime-local" id="validUntil" name="valid_until" class="form-control" required>
+                        </div>
+
+                        <!-- Discount Fields -->
+                        <div id="discountFields" class="mb-3" style="display: none;">
+                            <label for="discountType" class="form-label">Discount Type:</label>
+                            <select id="discountType" name="discount_type" class="form-select">
+                                <option value="amount">Discount Amount</option>
+                                <option value="percentage">Discount Percentage</option>
+                            </select>
+
+                            <div id="discountAmountField" style="display: none;" class="mt-3">
+                                <label for="discountAmount" class="form-label">Discount Amount:</label>
+                                <input type="number" id="discountAmount" name="discount_amount" step="0.01" class="form-control">
+                            </div>
+
+                            <div id="discountPercentageField" style="display: none;" class="mt-3">
+                                <label for="discountPercentage" class="form-label">Discount Percentage:</label>
+                                <input type="number" id="discountPercentage" name="discount_percentage" step="0.01" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Min Purchase Fields -->
+                        <div id="minPurchaseFields" class="mb-3" style="display: none;">
+                            <label for="minimumPurchaseAmount" class="form-label">Minimum Purchase Amount:</label>
+                            <input type="number" id="minimumPurchaseAmount" name="minimum_purchase_amount" step="0.01" class="form-control">
+
+                            <label for="rewardType" class="form-label mt-3">Reward Type:</label>
+                            <select id="rewardType" name="reward_type" class="form-select">
+                                <option value="discount">Discount Coupon</option>
+                                <option value="coins">Coins Reward</option>
+                            </select>
+
+                            <!-- Discount Reward Fields -->
+                            <div id="discountRewardFields" style="display: none;" class="mt-3">
+                                <label for="discountRewardAmount" class="form-label">Discount Amount:</label>
+                                <input type="number" id="discountRewardAmount" name="discount_reward_amount" step="0.01" class="form-control">
+                            </div>
+
+                            <!-- Coin Reward Fields -->
+                            <div id="coinRewardFields" style="display: none;" class="mt-3">
+                                <label for="coinReward" class="form-label">Coins to Reward:</label>
+                                <input type="number" id="coinReward" name="coin_reward" class="form-control">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Create Coupon</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide fields based on coupon type selection
+        document.getElementById('couponType').addEventListener('change', function() {
+            const couponType = this.value;
+            const discountFields = document.getElementById('discountFields');
+            const minPurchaseFields = document.getElementById('minPurchaseFields');
+
+            if (couponType === 'discount') {
+                discountFields.style.display = 'block';
+                minPurchaseFields.style.display = 'none';
+            } else if (couponType === 'min_purchase') {
+                discountFields.style.display = 'none';
+                minPurchaseFields.style.display = 'block';
+            }
+        });
+
+        // Show/hide discount fields based on discount type selection
+        document.getElementById('discountType').addEventListener('change', function() {
+            const discountType = this.value;
+            const discountAmountField = document.getElementById('discountAmountField');
+            const discountPercentageField = document.getElementById('discountPercentageField');
+
+            if (discountType === 'amount') {
+                discountAmountField.style.display = 'block';
+                discountPercentageField.style.display = 'none';
+            } else if (discountType === 'percentage') {
+                discountAmountField.style.display = 'none';
+                discountPercentageField.style.display = 'block';
+            }
+        });
+
+        // Show/hide reward type fields for minimum purchase
+        document.getElementById('rewardType').addEventListener('change', function() {
+            const rewardType = this.value;
+            const discountRewardFields = document.getElementById('discountRewardFields');
+            const coinRewardFields = document.getElementById('coinRewardFields');
+
+            if (rewardType === 'discount') {
+                discountRewardFields.style.display = 'block';
+                coinRewardFields.style.display = 'none';
+            } else if (rewardType === 'coins') {
+                discountRewardFields.style.display = 'none';
+                coinRewardFields.style.display = 'block';
+            }
+        });
+    </script>
+
+</body>
+</html>

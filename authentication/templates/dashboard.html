@@ -20,7 +20,8 @@
                         <a href="#profile" class="nav-link text-white">👤 Profile</a>
                     </li>
                     <li class="nav-item mb-3">
-                        <a href="#coins" class="nav-link text-white">💰 Coins</a>
+                        <a href="{% url 'loyalty_configuration' %}" class="nav-link text-white">💰 Coins</a>
+                        
                     </li>
                     <li class="nav-item mb-3">
                         <a href="{% url 'create_coupon' %}" class="nav-link text-white">🎟️ Coupons</a>
@@ -53,10 +54,10 @@
                     <h4 style="font-weight: bold; color: #555;">💰 Coins</h4>
                     <div class="card shadow-sm" style="border: none;">
                         <div class="card-body">
-                            <p class="mb-2">You have <span id="coin-count" style="font-weight: bold;">150</span> coins available.</p>
+                            {% comment %} <p class="mb-2">You have <span id="coin-count" style="font-weight: bold;">150</span> coins available.</p> {% endcomment %} 
                             <div class="d-flex justify-content-between">
-                                <a href="" class="btn btn-primary w-48">Test 1</a>
-                                <a href="" class="btn btn-primary w-48">Test 2</a>
+                                <a href="{% url 'loyalty_configuration' %}" class="btn btn-primary w-48">Set Configuration</a>
+                                
                             </div>
                         </div>
                     </div>

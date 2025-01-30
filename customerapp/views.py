@@ -1,5 +1,3 @@
-import stripe 
-from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,7 +11,7 @@ from decimal import Decimal
 from django.db import transaction
 import json
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from django.contrib import messages
 
 
 def generate_jwt_tokens(user):
@@ -35,7 +33,7 @@ class CustomerRegisterView(View):
         phone = request.POST.get('phone_number')
         email = request.POST.get('email') 
         referral_code = request.POST.get('referral_code', None)  
-        business_name = "vendor"
+        business_name = "vendor2" # change business name accordingly
 
         if not username or not password:
             return HttpResponse("Username and password are required.", status=400)
@@ -75,7 +73,8 @@ class CustomerRegisterView(View):
             if response.status_code != 200:
                 # Log the error but do not roll back user creation for signup bonuses
                 print(f"Referral API error: {response.status_code}")
-
+            messages.success(request, "Registration successful! You can now log in.")
+            
         except requests.RequestException as e:
             print(f"API call failed: {str(e)}")
             return HttpResponse("Unable to complete registration. Please try again.", status=500)
@@ -161,9 +160,9 @@ class CartView(LoginRequiredMixin, View):
             'cart_items': cart_items,
             'total_price': total_price
         })
-        
-class CheckoutView(LoginRequiredMixin, View):
 
+
+class CheckoutView(LoginRequiredMixin, View):
     def get(self, request):
         customer = request.user.customer
         cart_items = Cart.objects.filter(customer=customer)
@@ -179,60 +178,88 @@ class CheckoutView(LoginRequiredMixin, View):
             'discount': 0,
             'final_price': total_price,
         })
-    
+
     def post(self, request):
+        error_message = None
         customer = request.user.customer
         cart_items = Cart.objects.filter(customer=customer)
-        
+
+        # Calculate initial total price
         total_price = 0
         for item in cart_items:
             item.total = item.product.price * item.quantity
             total_price += item.total
-        
+
+        # Initialize variables
         coupon_code = request.POST.get('coupon_code')
         discount = 0
-        final_price = total_price
-        business_name = "Allen solly"
+        price_after_coupon = total_price
+        business_name = request.POST.get('business_name', "vendor2")  # change business name accordingly
 
-        # Prepare the data for API request
-        coupon_data = {
-            'coupon_code': coupon_code,
-            'total_price': float(total_price),
-            'business_name': business_name,
-            'cust_id': str(customer.id)
-            
-        }
+        # Apply coupon if provided
+        if coupon_code:
+            coupon_data = {
+                'coupon_code': coupon_code,
+                'total_price': float(total_price),
+                'business_name': business_name,
+                'cust_id': str(customer.id)
+            }
 
-        # Send the request to the coupons API
-        try:
-            response = requests.post(
-                'http://127.0.0.1:8000/coupons/api/coupons/apply/',
-                json=coupon_data
-            )
-            if response.status_code == 200:
-                result = response.json()
-                if result.get('success'):
-                    discount = Decimal(result.get('discount_value', 0))
-                    final_price = total_price - discount
+            try:
+                response = requests.post(
+                    'http://127.0.0.1:8000/coupons/api/coupons/apply/',
+                    json=coupon_data
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get('success'):
+                        discount = Decimal(result.get('discount_value', 0))
+                        price_after_coupon = total_price - discount
+                    else:
+                        error_message = result.get('message', 'Invalid coupon')
                 else:
-                    # If coupon is invalid or expired
-                    error_message = result.get('message', 'Invalid coupon')
-                    # You can display the error message on the frontend
-                    print(error_message)
-            else:
-                print("Error with coupon API", response.status_code)
+                    error_message = "Error with coupon API"
+            except requests.exceptions.RequestException as e:
+                error_message = f"Error while requesting coupon API: {e}"
 
-        except requests.exceptions.RequestException as e:
-            print(f"Error while requesting coupon API: {e}")
+        # Initialize final price after coupon
+        final_price = price_after_coupon
+
+        # Handle wallet balance redemption
+        no_of_coins = int(request.POST.get('wallet_balance', 0))  # Wallet input from form
+        currency = request.POST.get('currency', 'INR')  # Default currency
+
+        if no_of_coins > 0:
+            redeem_data = {
+                'customer_id': customer.id,
+                'business_name': business_name,
+                'total_price': float(price_after_coupon),  # Apply after coupon discount
+                'no_of_coins': no_of_coins,
+                'currency': currency
+            }
+
+            try:
+                response = requests.post(
+                    'http://127.0.0.1:8000/api/redeem-coin/',
+                    json=redeem_data
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    final_price = result.get('reduced_price', price_after_coupon)
+                else:
+                    error_message = response.json().get('error', 'Wallet redemption failed')
+            except requests.exceptions.RequestException as e:
+                error_message = f"Error connecting to wallet API: {e}"
 
         return render(request, 'checkout.html', {
             'cart_items': cart_items,
             'total_price': total_price,
             'discount': discount,
-            'final_price': final_price
+            'final_price': final_price,
+            'error_message': error_message
         })
 
-    
+
 
 class WalletView(LoginRequiredMixin, View):
     def get(self, request):
@@ -273,3 +300,45 @@ class WalletView(LoginRequiredMixin, View):
 
         # Render the wallet page with the balance and referral code
         return render(request, 'wallet.html', {'balance': balance, 'referral_code': referral_code})
+
+
+class PaymentView(LoginRequiredMixin, View):
+    def post(self, request):
+        customer = request.user.customer
+        cart_items = Cart.objects.filter(customer=customer)
+        
+        total_price = 0
+        for item in cart_items:
+            item.total = item.product.price * item.quantity
+            total_price += item.total
+
+        # Simulate dummy payment
+        payment_status = "success"  # Simulate a successful payment
+
+        if payment_status == "success":
+            # After successful payment, prepare data for the API request
+            business_name = "vendor2"
+            payload = {
+                'customer_id': customer.id,
+                'business_name': business_name,
+                'total_price': float(total_price)
+            }
+
+            # Call the external API (RequestCustomerDataView)
+            try:
+                response = requests.post(
+                    'http://127.0.0.1:8000/api/purchase-data/',
+                    json=payload
+                )
+                if response.status_code == 200:
+                    # Clear the cart after successful payment and API request
+                    cart_items.delete()
+                    return JsonResponse({'message': 'Payment successful and data sent!'}, status=200)
+                else:
+                    print(f"API error: {response.status_code}")
+                    return JsonResponse({'error': 'Payment successful but data submission failed.'}, status=500)
+            except requests.RequestException as e:
+                print(f"API call failed: {e}")
+                return JsonResponse({'error': 'Payment successful but data submission failed.'}, status=500)
+
+        return JsonResponse({'error': 'Payment failed.'}, status=400)

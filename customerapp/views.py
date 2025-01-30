@@ -66,7 +66,7 @@ class CustomerRegisterView(View):
                 'http://127.0.0.1:8000/api/customer-data/',
                 json=payload
             )
-            # print(payload)
+            print(payload)
         
 
 

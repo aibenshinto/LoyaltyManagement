@@ -70,7 +70,7 @@
                         {% endif %}
                         <div class="card-body text-center">
                             <h5 class="card-title">{{ product.name }}</h5>
-                            <p class="card-text text-success fw-bold">Price: ${{ product.price }}</p>
+                            <p class="card-text text-success fw-bold">Price: ₹{{ product.price }}</p>
                             <form action="{% url 'add-to-cart' product.id %}" method="POST" class="d-flex flex-column align-items-center">
                                 {% csrf_token %}
                                 <label for="quantity" class="form-label">Quantity:</label>

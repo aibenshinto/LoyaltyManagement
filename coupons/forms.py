@@ -1,10 +1,7 @@
-
 from django import forms
-from .models import Coupon,DiscountCoupon,BOGOCoupon
+from .models import Coupon,DiscountCoupon
 from .models import Vendor
 from django.contrib.auth.models import User
-
-
 
 class CouponForm(forms.ModelForm):
     class Meta:
@@ -22,12 +19,6 @@ class DiscountCouponForm(forms.ModelForm):
     class Meta:
         model = DiscountCoupon
         fields = ['discount_amount', 'discount_percentage']
-        
-class BOGOCouponForm(forms.ModelForm):
-    class Meta:
-        model = BOGOCoupon
-        fields = ['product_to_buy', 'free_product']
-        
-
+    
 class ApplyCouponForm(forms.Form):
     coupon_code = forms.CharField(max_length=20, label='Enter Coupon Code')

@@ -33,7 +33,7 @@ class CustomerRegisterView(View):
         phone = request.POST.get('phone_number')
         email = request.POST.get('email') 
         referral_code = request.POST.get('referral_code', None)  
-        business_name = "max" # change business name accordingly
+        business_name = "Nike"
 
         if not username or not password:
             return HttpResponse("Username and password are required.", status=400)
@@ -160,7 +160,7 @@ class CartView(LoginRequiredMixin, View):
             'cart_items': cart_items,
             'total_price': total_price
         })
-
+        
 
 class CheckoutView(LoginRequiredMixin, View):
     def get(self, request):
@@ -191,10 +191,12 @@ class CheckoutView(LoginRequiredMixin, View):
             total_price += item.total
 
         # Initialize variables
+
+        # Initialize variables
         coupon_code = request.POST.get('coupon_code')
         discount = 0
         price_after_coupon = total_price
-        business_name = request.POST.get('business_name', "max")  # change business name accordingly
+        business_name = request.POST.get('business_name', "Nike")  # Dynamically get business name
 
         # Apply coupon if provided
         if coupon_code:
@@ -250,6 +252,8 @@ class CheckoutView(LoginRequiredMixin, View):
                     error_message = response.json().get('error', 'Wallet redemption failed')
             except requests.exceptions.RequestException as e:
                 error_message = f"Error connecting to wallet API: {e}"
+                
+        request.session['final_price'] = float(final_price)       
 
         return render(request, 'checkout.html', {
             'cart_items': cart_items,
@@ -259,7 +263,7 @@ class CheckoutView(LoginRequiredMixin, View):
             'error_message': error_message
         })
 
-
+ 
 
 class WalletView(LoginRequiredMixin, View):
     def get(self, request):
@@ -307,21 +311,21 @@ class PaymentView(LoginRequiredMixin, View):
         customer = request.user.customer
         cart_items = Cart.objects.filter(customer=customer)
         
-        total_price = 0
-        for item in cart_items:
-            item.total = item.product.price * item.quantity
-            total_price += item.total
+        # Retrieve final price from session
+        final_price = request.session.get('final_price', None)
+        if final_price is None:
+            return JsonResponse({'error': 'Final price not found. Please reattempt checkout.'}, status=400)
 
         # Simulate dummy payment
         payment_status = "success"  # Simulate a successful payment
 
         if payment_status == "success":
             # After successful payment, prepare data for the API request
-            business_name = "max"
+            business_name = "Nike"
             payload = {
                 'customer_id': customer.id,
                 'business_name': business_name,
-                'total_price': float(total_price)
+                'total_price': float(final_price)
             }
 
             # Call the external API (RequestCustomerDataView)
@@ -333,7 +337,9 @@ class PaymentView(LoginRequiredMixin, View):
                 if response.status_code == 200:
                     # Clear the cart after successful payment and API request
                     cart_items.delete()
-                    return JsonResponse({'message': 'Payment successful and data sent!'}, status=200)
+                    request.session.pop('final_price', None)
+ 
+                    return render(request, 'payment_success.html', {'message': 'Payment successful and data sent!'})
                 else:
                     print(f"API error: {response.status_code}")
                     return JsonResponse({'error': 'Payment successful but data submission failed.'}, status=500)

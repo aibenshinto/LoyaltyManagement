@@ -110,4 +110,3 @@ class ApplyCouponAPI(APIView):
                     'message': result['message']
                 }, status=400)
         return Response(serializer.errors, status=400)
-

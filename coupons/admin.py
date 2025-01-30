@@ -17,5 +17,3 @@ admin.site.register(DiscountCoupon, DiscountCouponAdmin)
 
 class MinPurchaseCouponsAdmin(admin.ModelAdmin):
     list_display = ('coupon','minimum_purchase_amount','discount_amount','coin_reward')
-
-

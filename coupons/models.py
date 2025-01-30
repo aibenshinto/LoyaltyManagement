@@ -10,7 +10,7 @@ class Coupon(models.Model):
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()
 
-    def __str__(self):
+    def _str_(self):
         return f"Coupon for {self.vendor.user} - Code: {self.code}"
 
 # Discount Coupon Model with Specific Rules
@@ -41,4 +41,3 @@ class MinPurchaseCoupon(models.Model):
                 return {'reward': 'coins', 'coins_awarded': self.coin_reward}
         else:
             return {'reward': 'none'}
-

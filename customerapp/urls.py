@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CustomerRegisterView, ProductListView, LoginView, LogoutView, AddToCartView, CartView, CheckoutView, WalletView
+from .views import CustomerRegisterView, ProductListView, LoginView, LogoutView, AddToCartView, CartView, CheckoutView, WalletView, PaymentView
 
 from django.shortcuts import redirect
 
@@ -13,6 +13,6 @@ urlpatterns = [
     path('cart/', CartView.as_view(), name='cart'),  # Cart view should display the cart items
     path('checkout/', CheckoutView.as_view(), name='checkout'),
     path('wallet/', WalletView.as_view(), name='wallet-view'),
-
+    path('payment/', PaymentView.as_view(), name='payment') 
 
 ]

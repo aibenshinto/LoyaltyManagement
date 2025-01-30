@@ -1,5 +1,3 @@
-import stripe 
-from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,7 +11,7 @@ from decimal import Decimal
 from django.db import transaction
 import json
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from django.contrib import messages
 
 
 def generate_jwt_tokens(user):
@@ -68,14 +66,15 @@ class CustomerRegisterView(View):
                 'http://127.0.0.1:8000/api/customer-data/',
                 json=payload
             )
-            # print(payload)
+            print(payload)
         
 
 
             if response.status_code != 200:
                 # Log the error but do not roll back user creation for signup bonuses
                 print(f"Referral API error: {response.status_code}")
-
+            messages.success(request, "Registration successful! You can now log in.")
+            
         except requests.RequestException as e:
             print(f"API call failed: {str(e)}")
             return HttpResponse("Unable to complete registration. Please try again.", status=500)
@@ -192,6 +191,8 @@ class CheckoutView(LoginRequiredMixin, View):
             total_price += item.total
 
         # Initialize variables
+
+        # Initialize variables
         coupon_code = request.POST.get('coupon_code')
         discount = 0
         price_after_coupon = total_price
@@ -258,6 +259,8 @@ class CheckoutView(LoginRequiredMixin, View):
             'cart_items': cart_items,
             'total_price': total_price,
             'discount': discount,
+            'final_price': final_price,
+            'error_message': error_message
             'final_price': final_price,
             'error_message': error_message
         })

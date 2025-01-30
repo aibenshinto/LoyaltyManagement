@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Loyalty Management</title>
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+   <div class="container">
+       <h1>Loyalty Management Configuration</h1>
+
+
+       <div id="alertContainer"></div>
+
+
+       <form method="POST" action="{% url 'loyalty_configuration' %}">
+           {% csrf_token %}
+          
+           <div class="mt-4">
+               <h5 class="section-title">Signup Bonus</h5>
+               <label for="signupBonusCoins" class="form-label">Number of Coins:</label>
+               <input type="number" id="signupBonusCoins" name="signupBonusCoins" class="form-control" min="1"
+                   value="{{ config.signup_bonus_coins|default:'' }}" placeholder="Enter coins for signup bonus" required>
+           </div>
+
+
+           <div class="mt-4">
+               <h5 class="section-title">Purchase Rewards</h5>
+               <div id="purchaseRulesContainer">
+                   {% if purchase_rules %}
+                       {% for rule in purchase_rules %}
+                       <div class="row mb-3">
+                           <div class="col">
+                               <label class="form-label">Amount:</label>
+                               <input type="number" name="purchaseRules[{{ forloop.counter0 }}][amount]" class="form-control"
+                                   value="{{ rule.amount }}" min="1" required>
+                           </div>
+                           <div class="col">
+                               <label class="form-label">Coins:</label>
+                               <input type="number" name="purchaseRules[{{ forloop.counter0 }}][coins]" class="form-control"
+                                   value="{{ rule.coins }}" min="1" required>
+                           </div>
+                       </div>
+                       {% endfor %}
+                   {% endif %}
+               </div>
+               <button type="button" id="addRuleButton" class="btn btn-primary mt-3">Add Rule</button>
+           </div>
+
+
+           <div class="mt-4">
+               <h5 class="section-title">Referral Bonus</h5>
+               <label for="refereeBonusCoins" class="form-label">Coins for Referee:</label>
+               <input type="number" id="refereeBonusCoins" name="refereeBonusCoins" class="form-control" min="1"
+                   value="{{ config.referee_bonus_coins|default:'' }}" placeholder="Enter coins for the referee" required>
+
+
+               <label for="referrerBonusCoins" class="form-label mt-3">Coins for Referrer:</label>
+               <input type="number" id="referrerBonusCoins" name="referrerBonusCoins" class="form-control" min="1"
+                   value="{{ config.referrer_bonus_coins|default:'' }}" placeholder="Enter coins for the referrer" required>
+           </div>
+
+
+           <div class="mt-4">
+               <h5 class="section-title">Coin Value and Currency</h5>
+               <div class="row">
+                   <div class="col">
+                       <label for="coinValue" class="form-label">Coin Value:</label>
+                       <input type="number" id="coinValue" name="coinValue" class="form-control" min="1"
+                           value="{{ config.coin_value|default:'' }}" placeholder="Enter coin value" required>
+                   </div>
+                   <div class="col">
+                       <label for="currency" class="form-label">Currency:</label>
+                       <select id="currency" name="currency" class="form-select" required>
+                           <option value="" disabled selected>Select a currency</option>
+                           <option value="USD" {% if config.currency == 'USD' %}selected{% endif %}>USD</option>
+                           <option value="EUR" {% if config.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                           <option value="INR" {% if config.currency == 'INR' %}selected{% endif %}>INR</option>
+                           <!-- Add more currency options here -->
+                       </select>
+                   </div>
+               </div>
+           </div>
+
+
+           <div class="text-center mt-4">
+               <button type="submit" class="btn btn-success">Save Configuration</button>
+           </div>
+       </form>
+   </div>
+
+
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+   <script>
+       document.addEventListener('DOMContentLoaded', () => {
+           const addRuleButton = document.getElementById('addRuleButton');
+           const purchaseRulesContainer = document.getElementById('purchaseRulesContainer');
+           let ruleIndex = {% if purchase_rules %}{{ purchase_rules|length }}{% else %}0{% endif %};
+
+
+           // Add purchase rule function
+           function addPurchaseRule() {
+               const ruleRow = document.createElement('div');
+               ruleRow.classList.add('row', 'mb-3');
+
+
+               const amountCol = document.createElement('div');
+               amountCol.classList.add('col');
+               const amountLabel = document.createElement('label');
+               amountLabel.classList.add('form-label');
+               amountLabel.textContent = 'Amount:';
+               const amountInput = document.createElement('input');
+               amountInput.type = 'number';
+               amountInput.name = `purchaseRules[${ruleIndex}][amount]`;
+               amountInput.classList.add('form-control');
+               amountInput.placeholder = 'Amount';
+               amountInput.min = '1';
+               amountInput.required = true;
+
+
+               const coinsCol = document.createElement('div');
+               coinsCol.classList.add('col');
+               const coinsLabel = document.createElement('label');
+               coinsLabel.classList.add('form-label');
+               coinsLabel.textContent = 'Coins:';
+               const coinsInput = document.createElement('input');
+               coinsInput.type = 'number';
+               coinsInput.name = `purchaseRules[${ruleIndex}][coins]`;
+               coinsInput.classList.add('form-control');
+               coinsInput.placeholder = 'Coins';
+               coinsInput.min = '1';
+               coinsInput.required = true;
+
+
+               amountCol.appendChild(amountLabel);
+               amountCol.appendChild(amountInput);
+               coinsCol.appendChild(coinsLabel);
+               coinsCol.appendChild(coinsInput);
+               ruleRow.appendChild(amountCol);
+               ruleRow.appendChild(coinsCol);
+               purchaseRulesContainer.appendChild(ruleRow);
+
+
+               ruleIndex++;
+           }
+
+
+           addRuleButton.addEventListener('click', addPurchaseRule);
+       });
+   </script>
+</body>
+</html>
+
+
+
+

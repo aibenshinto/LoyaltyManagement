@@ -35,7 +35,7 @@ class CustomerRegisterView(View):
         phone = request.POST.get('phone_number')
         email = request.POST.get('email') 
         referral_code = request.POST.get('referral_code', None)  
-        business_name = "vendor"
+        business_name = "admin"
 
         if not username or not password:
             return HttpResponse("Username and password are required.", status=400)

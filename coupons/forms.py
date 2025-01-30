@@ -1,4 +1,3 @@
-
 from django import forms
 from .models import Coupon,DiscountCoupon,BOGOCoupon
 from .models import Vendor

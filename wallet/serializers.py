@@ -47,3 +47,5 @@ class CustomerRedeemSerializer(serializers.Serializer):
        if not Vendor.objects.filter(business_name=value).exists():
            raise serializers.ValidationError("Business name is invalid.")
        return value
+   
+   

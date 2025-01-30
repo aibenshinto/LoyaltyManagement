@@ -10,7 +10,7 @@ class  CouponSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Coupon
-        fields = '__all__'
+        fields = "__all__"
 
     def create(self, validated_data):
         # Get the logged-in user from the request context
@@ -43,4 +43,3 @@ class ApplyCouponSerializer(serializers.Serializer):
     total_price = serializers.DecimalField(max_digits=10,decimal_places=2)
     business_name = serializers.CharField(max_length=20)
     cust_id = serializers.CharField(max_length=20)
-
